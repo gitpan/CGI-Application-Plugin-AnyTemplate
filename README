@@ -1,0 +1,668 @@
+NAME
+    CGI::Application::Plugin::AnyTemplate - Use any templating system from
+    within CGI::Application using a unified interface
+
+VERSION
+    Version 0.01
+
+SYNOPSIS
+    In your CGI::Application-based webapp:
+
+        use base 'CGI::Application';
+        use CGI::Application::Plugin::AnyTemplate;
+
+        sub cgiapp_init {
+            my $self = shift;
+
+            # Set template options
+            $self->template->config(
+                default_type => 'TemplateToolkit',
+            );
+        }
+
+    Later on, in a runmode:
+
+        sub my_runmode {
+            my $self = shift;
+
+            my %template_params = (
+                name     => 'Winston Churchill',
+                age      => 7,
+            );
+
+            $self->template->fill('some_template', \%template_params);
+        }
+
+DESCRIPTION
+  Template-Independence
+    "CGI::Application::Plugin::AnyTemplate" allows you to use any supported
+    Perl templating system using a single consistent interface.
+
+    Currently supported templating systems include HTML::Template,
+    HTML::Template::Expr, Template::Toolkit and Petal.
+
+    You can access any of these templating systems using the same interface.
+    In this way, you can use the same code and switch templating systems on
+    the fly.
+
+    This approach has many uses. For instance, it can be useful in migrating
+    your application from one templating system to another.
+
+  Component Dispatch
+    In addition to template abstraction, "AnyTemplate" also provides a
+    *component dispatch mechanism*. For instance, you might include a
+    *header* component at the top of every page and a *footer* component at
+    the bottom of every page.
+
+    These components are actually full CGI::Application run modes, and can
+    do anything normal run mode can do, including processing form parameters
+    and filling in their own templates. See below under "COMPONENT DISPATCH"
+    for details.
+
+  Multiple Named Template Configurations
+    You can set up multiple named template configurations and select between
+    them at run time.
+
+        sub cgiapp_init {
+            my $self = shift;
+
+            # Can't use Template::Toolkit any more -
+            # The boss wants everything has to be XML,
+            # so we switch to Petal
+
+            # Set old-style template options (legacy scripts)
+            $self->template('oldstyle')->config(
+                default_type => 'TemplateToolkit',
+                TemplateToolkit => {
+                    POST_CHOMP => 1,
+                }
+            );
+            # Set new-style template options as default
+            $self->template->config(
+                default_type => 'Petal',
+                auto_add_template_extension => 0,
+            );
+        }
+
+        sub old_style_runmode {
+            my $self = shift;
+
+            # ...
+
+            # use TemplateToolkit to fill template edit_user.tmpl
+            $self->template('oldstyle')->fill('edit_user', \%params);
+
+        }
+
+        sub new_style_runmode {
+            my $self = shift;
+
+            # ...
+
+            # use Petal to fill template edit_user.xhml
+            $self->template->fill('edit_user.xhtml', \%params);
+
+        }
+
+  Flexible Syntax
+    The syntax is pretty flexible. Pick a style that's most comfortable for
+    you.
+
+   CGI::Application::Plugin::TT style syntax
+        $self->template->process('edit_user', \%params);
+
+    or (with slightly less typing):
+
+        $self->template->fill('edit_user', \%params);
+
+   CGI::Application load_tmpl style syntax
+        my $template = $self->template->load('edit_user');
+        $template->param('foo' => 'bar');
+        $template->output;
+
+   Verbose syntax (for complete control)
+        my $template = $self->template('named_config')->load(
+            file             => 'edit_user'
+            type             => 'TemplateToolkit'
+            add_include_path => '.',
+        );
+
+        $template->param('foo' => 'bar');
+        $template->output;
+
+    See also below under "CHANGING THE NAME OF THE 'template' METHOD".
+
+METHODS
+  config
+    Initialize the "AnyTemplate" system and provide the default
+    configuration.
+
+        $self->template->config(
+            default_type => 'HTMLTemplate',
+        );
+
+    You can keep multiple configurations handy at the same time by passing a
+    value to "template":
+
+        $self->template('oldstyle')->config(
+            default_type => 'HTML::Template',
+        );
+        $self->template('newstyle')->config(
+            default_type => 'HTML::Template::Expr',
+        );
+
+    Then in a runmode you can mix and match configurations:
+
+        $self->template('oldstyle')->load  # loads an HTML::Template driver object
+        $self->template('newstyle')->load  # loads an HTML::Template::Expr driver object
+
+    The configuration passed to "config" is divided into three areas:
+    *plugin configuration*, *driver configuration*, and *native
+    configuration*:
+
+        Config Type       What it Configures
+        -----------       ------------------
+        Plugin Config     AnyTemplate itself
+        Driver Config     AnyTemplate Driver (e.g. HTMLTemplate)
+        Native Config     Actual template module (e.g. HTML::Template)
+
+    These are described in more detail below.
+
+   Plugin Configuration
+    These configuration params are specific to the
+    "CGI::Application::Plugin::AnyTemplate" itself. They are included at the
+    top level of the configuration hash passed to "config". For instance:
+
+        $self->template->config(
+            default_type                => 'HTMLTemplate',
+            auto_add_template_extension => 0,
+        );
+
+    The *plugin configuration* parameters and their defaults are as follows:
+
+    default_type
+    type
+        The default type of template for this named configuration. Should be
+        the name of a driver in the
+        "CGI::Application::Plugin::AnyTemplate::Driver" namespace:
+
+            Type                Driver
+            ----                ------
+            HTMLTemplate        CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate
+            HTMLTemplateExpr    CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr
+            TemplateToolkit     CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit
+            Petal               CGI::Application::Plugin::AnyTemplate::Driver::Petal
+
+    include_paths
+        Include Paths (sometimes called search paths) are used by the
+        various template backends to find filenames that aren't fully
+        qualified by an absolute path. Each directory is searched in turn
+        until the template file is found.
+
+        Can be a single string or a reference to a list.
+
+    auto_add_template_extension
+        Add a template-system specific extension to template filenames.
+
+        So, if this feature is enabled and you provide the filename
+        "myfile", then the actual filename will depend on the current
+        template driver:
+
+            Driver                 Template
+            ------                 --------
+            HTMLTemplate           myfile.html
+            HTMLTemplateExpr       myfile.html
+            TemplateToolkit        myfile.tmpl
+            Petal                  myfile.xhtml
+
+        The per-type extension is controlled by the driver config for each
+        "AnyTemplate" driver (see below under "Driver Configuration" for how
+        to set this).
+
+        The "auto_add_template_extension" feature is on by default. To
+        disable it, pass a value of zero:
+
+            $self->template->config(
+                auto_add_template_extension => 0,
+            );
+
+    dispatcher_class
+        Normally, component dispatching is handled by
+        CGI::Application::Plugin::AnyTemplate::Dispatcher. If you want to
+        use a different class for this purpose, specify the class name as
+        the value of this paramter.
+
+        It still has to provide the same interface as
+        CGI::Application::Plugin::AnyTemplate::Dispatcher. See the source
+        code of that module for details.
+
+   Driver and Native Configuration
+    You can configure all the drivers at once with a single call to
+    "config", by including subsections for each driver type:
+
+        $self->template->config(
+            default_type => 'HTMLTemplate',
+            HTMLTemplate => {
+                cache              => 1,
+                global_vars        => 1,
+                die_on_bad_params  => 0,
+                template_extension => '.html',
+            },
+            HTMLTemplateExpr => {
+                cache              => 1,
+                global_vars        => 1,
+                die_on_bad_params  => 0,
+                template_extension => '.html',
+            },
+            TemplateToolkit => {
+                POST_CHOMP         => 1,
+                template_extension => '.tmpl',
+            },
+            Petal => {
+                error_on_undef     => 0,
+                template_extension => '.xhtml',
+            },
+        );
+
+    Each driver knows how to separate its own configuration from the
+    configuration belonging to the underlying template system.
+
+    For instance in the example above, the "HTMLTemplate" driver knows that
+    "template_extension" is a driver config parameter, but
+    "cache_global_vars" and "die_on_bad_params" are all HTML::Template
+    configuration parameters.
+
+    Similarly, The "TemplateToolkit" driver knows that template_extension is
+    a driver config parameter, but "POST_CHOMP" is a "Template::Toolkit"
+    configuration parameter.
+
+    For details on driver configuration, see the docs for the individual
+    drivers:
+
+        CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate
+        CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr
+        CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit
+        CGI::Application::Plugin::AnyTemplate::Driver::Petal
+
+   Copying Query data into Templates
+    By default, all data in "$self->query" are copied into the template
+    object before the template is processed.
+
+    For the "HTMLTemplate" and "HTMLTemplateExpr" drivers this is done with
+    the "associate" feature of HTML::Template and HTML::Template::Expr,
+    respectively:
+
+        my $template = HTML::Template->new(
+            associate => $self->query,
+        );
+
+    For the other systems, this feature is emulated, by copying the query
+    params into the template params before the template is processed.
+
+    To disable this feature, pass a false value to "associate_query" or
+    "emulate_associate_query" (depending on the template system):
+
+        $self->template->config(
+            default_type => 'HTMLTemplate',
+            HTMLTemplate => {
+                associate_query => 0,
+            },
+            HTMLTemplateExpr => {
+                associate_query => 0,
+            },
+            TemplateToolkit => {
+                emulate_associate_query => 0,
+            },
+            Petal => {
+                emulate_associate_query => 0,
+            },
+        );
+
+  load
+    Create a new template object and configure it.
+
+    This can be as simple (and magical) as:
+
+        my $template = $self->template->load;
+
+    When you call "load" with no parameters, it uses the default template
+    type, the default template configuration, and it determines the name of
+    the template based on the name of the current run mode.
+
+    If you call "load" with one paramter, it is taken to be the filename.
+
+        my $template = $self->template->load('somefile');
+
+    If the parameter "auto_add_template_exension" is true, then the
+    appropriate extension will be added for this template type.
+
+    If you call "load" with more than one parameter, then you can specify
+    filename and configuration paramters directly:
+
+        my $template = $self->template->load(
+            file                        => 'some_file.tmpl',
+            type                        => 'HTMLTemplate',
+            auto_add_template_extension => 0,
+            add_inlcude_path            => '..',
+            HTMLTemplate => {
+                die_on_bad_params => 1,
+            },
+        );
+
+    The configuration is merged with the configuration that was passed to
+    config.
+
+    You can include any of the configuration parameters that you can pass to
+    config, plus the following extra parameters:
+
+    file
+        The template's filename.
+
+    add_include_paths
+        Additional include paths. These will be merged with "include_paths"
+        before being passed to the template driver.
+
+    The "load" method returns a template driver object. See below under
+    "DRIVER METHODS", for how to use this object.
+
+  fill
+    Fill is a convenience method which in a single step creates the
+    template, fills it with the template paramters and returns its output.
+
+    You can call it with or without a filename.
+
+    The code:
+
+        $self->template->fill('filename', \%params);
+
+    is equivalent to:
+
+        my $template = $self->template->load('filename');
+        $template->output(\%params);
+
+    And the code:
+
+        $self->template->fill(\%params);
+
+    is equivalent to:
+
+        my $template = $self->template->load;
+        $template->output(\%params);
+
+  process
+    "process" is an alias for fill.
+
+DRIVER METHODS
+    These are the most commonly used methods of the "AnyTemplate" driver
+    object. The driver is what you get back from calling
+    "$self->template->load".
+
+    param
+        The "param" method gets and sets values within the template.
+
+            my $template = $self->template->load;
+
+            my @param_names = $template->param();
+
+            my $value = $template->param('name');
+
+            $template->param('name' => 'value');
+            $template->param(
+                'name1' => 'value1',
+                'name2' => 'value2'
+            );
+
+        It is designed to behave similarly to the "param" method in other
+        modules like CGI and HTML::Template.
+
+    get_param_hash
+        Returns the template variables as a hash of names and values.
+
+            my %params     = $self->template->get_param_hash;
+
+        In a scalar context, returns a reference to the hash used internally
+        to contain the values:
+
+            my $params_ref = $self->template->get_param_hash;
+
+            $params_ref->{'foo'} = 'bar';  # directly change parameter 'foo'
+
+    output
+        Returns the template with all the values filled in.
+
+            return $template->output;
+
+        You can also supply names and values to the template at this stage:
+
+            return $template->output('name' => 'value', 'name2' => 'value2');
+
+PRE- AND POST- PROCESS
+    Before the template output is generated, your application's
+    "$self->template_pre_process" method is called. This method is passed a
+    reference to the $template object.
+
+    It can modify the parameters passed into the template by using the
+    "param" method:
+
+        sub template_pre_process {
+            my ($self, $template) = @_;
+
+            # Change the internal template parameters by reference
+            my $params = $template->get_param_hash;
+
+            foreach my $key (keys %$params) {
+                $params{$key} = to_piglatin($params{$key});
+            }
+
+            # Can also set values using the param method
+            $template->param('foo', 'bar');
+
+        }
+
+    After the template output is generated, your application's
+    "$self->template_post_process" method is called. This method is passed a
+    reference to the template object and a reference to the output generated
+    by the template. You can modify this output:
+
+        sub template_post_process {
+            my ($self, $template, $output_ref) = @_;
+
+            $$output_ref =~ s/foo/bar/;
+        }
+
+    When you call the "output" method, any components embedded in the
+    template are run. See "COMPONENT DISPATCH", below.
+
+COMPONENT DISPATCH
+  Introduction
+    "CGI::Application::Plugin::AnyTemplate" allows you to include
+    application components within your templates.
+
+    For instance, you might include a *header* component a the top of every
+    page and a *footer* component at the bottom of every page.
+
+    These componenets are actually first-class run modes. When the template
+    engine finds a special tag marking an embedded component, it passes
+    control to the run mode of that name. That run mode can then do whatever
+    a normal run mode could do. But typically it will load its own template
+    and return the template's output.
+
+    This output returned from the embedded run mode is inserted into the
+    containing template.
+
+    The syntax for dispatching to embedded components is specific to each
+    type of template driver.
+
+  Syntax
+    HTML::Template syntax:
+
+        <TMPL_VAR NAME="CGIAPP_dispatch('some_run_mode')">
+
+    HTML::Template::Expr syntax:
+
+        <TMPL_VAR EXPR="CGIAPP_dispatch('some_run_mode')">
+
+    Template::Toolkit syntax:
+
+        [% CGIAPP.dispatch("some_run_mode") %]
+
+    Petal syntax:
+
+        <span tal:replace="structure CGIAPP/dispatch 'some_run_mode'">
+            this text gets replaced by the output of some_run_mode
+        </span>
+
+  Getting Template Variables from the Containing Template
+    The component run mode is passed a reference to the template object that
+    contained the component. The component run mode can use this object to
+    access the params that were passed to the containing template.
+
+    For instance:
+
+        sub header {
+            my ($self, $containing_template, @other_params) = @_;
+
+            my %tmplvars = (
+                'title' => 'My glorious home page',
+            );
+
+            my $template = $self->template->load;
+
+            $template->param(%tmplvars, $containing_template->get_param_hash);
+            return $template->output;
+        }
+
+    In this example, the template values of the enclosing template would
+    override any values set by the embedded component.
+
+  Passing Parameters
+    The template can pass parameters to the target run mode. These are
+    passed in after the reference to the containing template object.
+
+    Parameters can either be literal strings, specified within the template
+    text, or they can be keys that will be looked up in the template's
+    params.
+
+    Literal strings are enclosed in double or single quotes. Param keys are
+    barewords.
+
+    HTML::Template syntax:
+
+        <TMPL_VAR NAME="CGIAPP_dispatch('some_run_mode', param1, 'literal string2')">
+
+    *Note that HTML::Template doesn't support this type of callback
+    natively* *and that this behaviour is emulated by the HTMLTemplate
+    driver* *see the docs to*
+    CGI::Application::AnyTemplate::Driver::HTMLTemplate *for limitations to
+    the emulation*.
+
+    HTML::Template::Expr syntax:
+
+        <TMPL_VAR EXPR="CGIAPP_dispatch('some_run_mode', param1, 'literal string2')">
+
+    Template::Toolkit syntax:
+
+        [% CGIAPP.dispatch("some_run_mode", param1, 'literal string2' ) %]
+
+    Petal syntax:
+
+        <span tal:replace="structure CGIAPP/dispatch 'some_run_mode' param1 'literal string2' ">
+            this text gets replaced by the output of some_run_mode
+        </span>
+
+CHANGING THE NAME OF THE 'template' METHOD
+    If you want to access the features of this module using a method other
+    than "template", you can do so via Anno Siegel's Exporter::Renaming
+    module (available on CPAN).
+
+    For instance, to use syntax similar to CGI::Application::Plugin::TT:
+
+        use Exporter::Renaming;
+        use CGI::Application::Plugin::AnyTemplate Renaming => [ template => tt];
+
+        sub cgiapp_init {
+            my $self = shift;
+
+            my %params = ( ... );
+
+            # Set config file and other options
+            $self->tt->config(
+                default_type => 'TemplateToolkit',
+            );
+
+        }
+
+        sub my_runmode {
+            my $self = shift;
+            $self->tt->process('file', \%params);
+        }
+
+    And to use syntax similar to CGI::Application's "load_tmpl" mechanism:
+
+        use Exporter::Renaming;
+        use CGI::Application::Plugin::AnyTemplate Renaming => [ template => tmpl];
+
+        sub cgiapp_init {
+            my $self = shift;
+
+            # Set config file and other options
+            $self->tmpl->config(
+                default_type => 'HTMLTemplate',
+            );
+
+        }
+
+        sub my_runmode {
+            my $self = shift;
+
+            my %params = ( ... );
+
+            my $template = $self->tmpl->load('file');
+            $template->param(\%params);
+            $template->output;
+        }
+
+AUTHOR
+    Michael Graham, "<mag-perl@occamstoothbrush.com>"
+
+ACKNOWLEDGEMENTS
+    I originally wrote this to be a subsystem in Richard Dice's
+    CGI::Application-based framework, before I moved it into its own module.
+
+    Various ideas taken from CGI::Application (Jesse Erlbaum),
+    CGI::Application::Plugin::TT (Cees Hek) and "Text::Boilerplate" (Stephen
+    Nelson).
+
+    "Template::Toolkit" singleton support code stolen from
+    CGI::Application::Plugin::TT.
+
+BUGS
+    Please report any bugs or feature requests to
+    "bug-cgi-application-plugin-anytemplate@rt.cpan.org", or through the web
+    interface at <http://rt.cpan.org>. I will be notified, and then you'll
+    automatically be notified of progress on your bug as I make changes.
+
+SEE ALSO
+        CGI::Application::Plugin::AnyTemplate::Base
+        CGI::Application::Plugin::AnyTemplate::Dispatcher
+        CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate
+        CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr
+        CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit
+        CGI::Application::Plugin::AnyTemplate::Driver::Petal
+
+        CGI::Application
+
+        Template::Toolkit
+        HTML::Template
+        Petal
+
+        Exporter::Renaming
+
+        CGI::Application::Plugin::TT
+
+COPYRIGHT & LICENSE
+    Copyright 2005 Michael Graham, All Rights Reserved.
+
+    This program is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+

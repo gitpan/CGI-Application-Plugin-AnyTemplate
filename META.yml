@@ -1,0 +1,44 @@
+--- #YAML:1.0
+name: CGI-Application-Plugin-AnyTemplate
+version: 0.01
+author:
+  - Michael Graham <mag-perl@occamstoothbrush.com>
+abstract: ! >-
+  Use any templating system from within CGI::Application using a unified
+  interface
+license: perl
+requires:
+  CGI::Application: 0
+  Clone: 0
+  Scalar::Util: 0
+  Test::More: 0
+provides:
+  CGI::Application::Plugin::AnyTemplate:
+    file: lib/CGI/Application/Plugin/AnyTemplate.pm
+    version: 0.01
+  CGI::Application::Plugin::AnyTemplate::Base:
+    file: lib/CGI/Application/Plugin/AnyTemplate/Base.pm
+  CGI::Application::Plugin::AnyTemplate::Dispatcher:
+    file: |-
+      lib/CGI/Application/Plugin/AnyTemplate/Dispatcher.pm
+  ? |-
+    CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate
+:
+    file: |-
+      lib/CGI/Application/Plugin/AnyTemplate/Driver/HTMLTemplate.pm
+  ? |-
+    CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr
+:
+    file: |-
+      lib/CGI/Application/Plugin/AnyTemplate/Driver/HTMLTemplateExpr.pm
+  ? |-
+    CGI::Application::Plugin::AnyTemplate::Driver::Petal
+:
+    file: |-
+      lib/CGI/Application/Plugin/AnyTemplate/Driver/Petal.pm
+  ? |-
+    CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit
+:
+    file: |-
+      lib/CGI/Application/Plugin/AnyTemplate/Driver/TemplateToolkit.pm
+generated_by: Module::Build version 0.2607

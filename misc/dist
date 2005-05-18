@@ -1,0 +1,7 @@
+#!/bin/sh
+
+misc/makedocs.pl
+perl ./Build.PL
+perl ./Build
+perl ./Build test
+perl ./Build dist
