@@ -1,5 +1,8 @@
 Revision history for CGI-Application-Plugin-AnyTemplate
 
+0.03    May 19, 2005
+        - More POD errors
+
 0.02    May 19, 2005
         - Fixed NAME sections in driver POD
 
