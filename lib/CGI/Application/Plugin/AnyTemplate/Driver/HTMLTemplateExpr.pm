@@ -3,7 +3,7 @@ package CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr;
 
 =head1 NAME
 
-CGI::Application::Plugin::AnyTemplate::HTMLTemplateExpr - HTML::Template::Expr driver to AnyTemplate
+CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr - HTML::Template::Expr driver to AnyTemplate
 
 =head1 DESCRIPTION
 

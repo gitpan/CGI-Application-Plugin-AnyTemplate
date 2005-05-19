@@ -3,7 +3,7 @@ package CGI::Application::Plugin::AnyTemplate::Driver::Petal;
 
 =head1 NAME
 
-CGI::Application::Plugin::AnyTemplate::Petal - Petal plugin to AnyTemplate
+CGI::Application::Plugin::AnyTemplate::Driver::Petal - Petal plugin to AnyTemplate
 
 =head1 DESCRIPTION
 
