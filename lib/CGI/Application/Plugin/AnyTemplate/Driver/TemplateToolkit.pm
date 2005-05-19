@@ -9,7 +9,7 @@ CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit - Template::Toolk
 
 This is a driver for L<CGI::Application::Plugin::AnyTemplate>, which
 provides the implementation details specific to rendering templates via
-the L<Template::Toolkit> templating system.
+the L<Template::Toolkit|Template> templating system.
 
 All C<AnyTemplate> drivers are designed to be used the same way.  For
 general usage instructions, see the documentation of
@@ -17,7 +17,7 @@ L<CGI::Application::Plugin::AnyTemplate>.
 
 =head1 COMPONENT DISPATCH SYNTAX (Template::Toolkit)
 
-The L<Template::Toolkit> syntax for component dispatch is:
+The L<Template::Toolkit|Template> syntax for component dispatch is:
 
     [% CGIAPP.dispatch("some_run_mode", param1, param2, 'literal string3') %]
 
@@ -38,18 +38,18 @@ Then the component dispatch tag will look like:
 
 =head2 Introduction
 
-In a persistent environment, rather than creating a C<Template::Toolkit>
+In a persistent environment, rather than creating a L<Template::Toolkit|Template>
 object each time you fill a template, it is much more efficient to load
-a single C<Template::Toolkit> object and use this object to render all
+a single L<Template::Toolkit|Template> object and use this object to render all
 of your templates.
 
 However, in a persistent environment, you may have several different
 applications running, and they all might need to set different
-C<Template::Toolkit> options (such as C<POST_CHOMP>, etc.).
+L<Template::Toolkit|Template> options (such as C<POST_CHOMP>, etc.).
 
 By default, when the C<TemplateToolkit> driver creates a
-C<Template::Toolkit> object, it caches it.  From that point on, whenever
-the same application needs a C<Template::Toolkit> object, the driver
+L<Template::Toolkit|Template> object, it caches it.  From that point on, whenever
+the same application needs a L<Template::Toolkit|Template> object, the driver
 uses the cached object rather than creating a new one.
 
 =head2 Multiple Applications in a Shared Persistent Environment
@@ -93,7 +93,7 @@ C<< $self->template->config >>.
 
 =head2 Disabling TT Object Caching
 
-You can disable C<Template::Toolkit> object caching entirely by
+You can disable L<Template::Toolkit|Template> object caching entirely by
 providing a false value to the C<object_caching> driver config
 parameter:
 
@@ -155,11 +155,11 @@ By default C<emulate_associate_query> is true.
 
 =item object_caching
 
-Whether or not to cache the C<Template::Toolkit> object in a persistent environment
+Whether or not to cache the L<Template::Toolkit|Template> object in a persistent environment
 
 By default, C<object_caching> is enabled.
 
-See L<TT OBJECT CACHING (singleton support)>, above.
+See L<"TT OBJECT CACHING (singleton support)">, above.
 
 =item storage_class
 
@@ -168,12 +168,12 @@ What class to use as the storage key when object caching is enabled.
 By default, C<storage_class> defaults to the package containing the
 subroutine that called C<< $self->template->config >>.
 
-See L<TT OBJECT CACHING (singleton support)>, above.
+See L<"TT OBJECT CACHING (singleton support)">, above.
 
 
 =back
 
-All other configuration parameters are passed on unchanged to L<Template::Toolkit>.
+All other configuration parameters are passed on unchanged to L<Template::Toolkit|Template>.
 
 =cut
 
@@ -259,7 +259,7 @@ sub initialize {
 
 =item render_template
 
-Fills the L<Template::Toolkit> object with C<< $self->param >>
+Fills the L<Template::Toolkit|Template> object with C<< $self->param >>
 
 If the param C<emulate_associate_query> is true, then set params for
 each of $self->{'webapp'}->query, mimicking L<HTML::Template>'s

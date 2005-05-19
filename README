@@ -3,7 +3,7 @@ NAME
     within CGI::Application using a unified interface
 
 VERSION
-    Version 0.03
+    Version 0.04
 
 SYNOPSIS
     In your CGI::Application-based webapp:
@@ -216,8 +216,8 @@ METHODS
             Petal                  myfile.xhtml
 
         The per-type extension is controlled by the driver config for each
-        "AnyTemplate" driver (see below under "Driver Configuration" for how
-        to set this).
+        "AnyTemplate" driver (see below under "Driver and Native
+        Configuration" for how to set this).
 
         The "auto_add_template_extension" feature is on by default. To
         disable it, pass a value of zero:
@@ -279,10 +279,10 @@ METHODS
     For details on driver configuration, see the docs for the individual
     drivers:
 
-        CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate
-        CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr
-        CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit
-        CGI::Application::Plugin::AnyTemplate::Driver::Petal
+    CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate
+    CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr
+    CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit
+    CGI::Application::Plugin::AnyTemplate::Driver::Petal
 
    Copying Query data into Templates
     By default, all data in "$self->query" are copied into the template
@@ -350,7 +350,7 @@ METHODS
         );
 
     The configuration is merged with the configuration that was passed to
-    config.
+    "config".
 
     You can include any of the configuration parameters that you can pass to
     config, plus the following extra parameters:
@@ -390,7 +390,7 @@ METHODS
         $template->output(\%params);
 
   process
-    "process" is an alias for fill.
+    "process" is an alias for "fill".
 
 DRIVER METHODS
     These are the most commonly used methods of the "AnyTemplate" driver
@@ -553,8 +553,8 @@ COMPONENT DISPATCH
     *Note that HTML::Template doesn't support this type of callback
     natively* *and that this behaviour is emulated by the HTMLTemplate
     driver* *see the docs to*
-    CGI::Application::AnyTemplate::Driver::HTMLTemplate *for limitations to
-    the emulation*.
+    CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate *for
+    limitations to the emulation*.
 
     HTML::Template::Expr syntax:
 

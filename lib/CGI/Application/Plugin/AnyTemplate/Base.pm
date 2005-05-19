@@ -297,7 +297,7 @@ The parameters C<global_vars>, C<die_on_bad_params>, and C<cache> are all
 specific to L<HTML::Template>.  These are considered I<native> parameters.
 
 But C<dispatch_tag_name> configures the
-C<CGI::Application::Plugin::AnyTemplate::HTMLTemplate> subclass.  This
+C<CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate> subclass.  This
 is considered a I<driver> parameter.
 
 Therefore C<'dispatch_tag_name'> should be included in the list of
