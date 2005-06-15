@@ -3,7 +3,7 @@ NAME
     within CGI::Application using a unified interface
 
 VERSION
-    Version 0.04
+    Version 0.05
 
 SYNOPSIS
     In your CGI::Application-based webapp:
@@ -48,16 +48,16 @@ DESCRIPTION
     This approach has many uses. For instance, it can be useful in migrating
     your application from one templating system to another.
 
-  Component Dispatch
+  Embedded Components
     In addition to template abstraction, "AnyTemplate" also provides a
-    *component dispatch mechanism*. For instance, you might include a
+    *embedded component mechanism*. For instance, you might include a
     *header* component at the top of every page and a *footer* component at
     the bottom of every page.
 
     These components are actually full CGI::Application run modes, and can
     do anything normal run mode can do, including processing form parameters
-    and filling in their own templates. See below under "COMPONENT DISPATCH"
-    for details.
+    and filling in their own templates. See below under "EMBEDDED
+    COMPONENTS" for details.
 
   Multiple Named Template Configurations
     You can set up multiple named template configurations and select between
@@ -226,15 +226,15 @@ METHODS
                 auto_add_template_extension => 0,
             );
 
-    dispatcher_class
-        Normally, component dispatching is handled by
-        CGI::Application::Plugin::AnyTemplate::Dispatcher. If you want to
-        use a different class for this purpose, specify the class name as
+    component_handler_class
+        Normally, component embedding is handled by
+        CGI::Application::Plugin::AnyTemplate::ComponentHandler. If you want
+        to use a different class for this purpose, specify the class name as
         the value of this paramter.
 
         It still has to provide the same interface as
-        CGI::Application::Plugin::AnyTemplate::Dispatcher. See the source
-        code of that module for details.
+        CGI::Application::Plugin::AnyTemplate::ComponentHandler. See the
+        source code of that module for details.
 
    Driver and Native Configuration
     You can configure all the drivers at once with a single call to
@@ -471,9 +471,9 @@ PRE- AND POST- PROCESS
         }
 
     When you call the "output" method, any components embedded in the
-    template are run. See "COMPONENT DISPATCH", below.
+    template are run. See "EMBEDDED COMPONENTS", below.
 
-COMPONENT DISPATCH
+EMBEDDED COMPONENTS
   Introduction
     "CGI::Application::Plugin::AnyTemplate" allows you to include
     application components within your templates.
@@ -490,25 +490,25 @@ COMPONENT DISPATCH
     This output returned from the embedded run mode is inserted into the
     containing template.
 
-    The syntax for dispatching to embedded components is specific to each
-    type of template driver.
+    The syntax for embed components is specific to each type of template
+    driver.
 
   Syntax
     HTML::Template syntax:
 
-        <TMPL_VAR NAME="CGIAPP_dispatch('some_run_mode')">
+        <TMPL_VAR NAME="CGIAPP_embed('some_run_mode')">
 
     HTML::Template::Expr syntax:
 
-        <TMPL_VAR EXPR="CGIAPP_dispatch('some_run_mode')">
+        <TMPL_VAR EXPR="CGIAPP_embed('some_run_mode')">
 
     Template::Toolkit syntax:
 
-        [% CGIAPP.dispatch("some_run_mode") %]
+        [% CGIAPP.embed("some_run_mode") %]
 
     Petal syntax:
 
-        <span tal:replace="structure CGIAPP/dispatch 'some_run_mode'">
+        <span tal:replace="structure CGIAPP/embed 'some_run_mode'">
             this text gets replaced by the output of some_run_mode
         </span>
 
@@ -548,7 +548,7 @@ COMPONENT DISPATCH
 
     HTML::Template syntax:
 
-        <TMPL_VAR NAME="CGIAPP_dispatch('some_run_mode', param1, 'literal string2')">
+        <TMPL_VAR NAME="CGIAPP_embed('some_run_mode', param1, 'literal string2')">
 
     *Note that HTML::Template doesn't support this type of callback
     natively* *and that this behaviour is emulated by the HTMLTemplate
@@ -558,15 +558,15 @@ COMPONENT DISPATCH
 
     HTML::Template::Expr syntax:
 
-        <TMPL_VAR EXPR="CGIAPP_dispatch('some_run_mode', param1, 'literal string2')">
+        <TMPL_VAR EXPR="CGIAPP_embed('some_run_mode', param1, 'literal string2')">
 
     Template::Toolkit syntax:
 
-        [% CGIAPP.dispatch("some_run_mode", param1, 'literal string2' ) %]
+        [% CGIAPP.embed("some_run_mode", param1, 'literal string2' ) %]
 
     Petal syntax:
 
-        <span tal:replace="structure CGIAPP/dispatch 'some_run_mode' param1 'literal string2' ">
+        <span tal:replace="structure CGIAPP/embed 'some_run_mode' param1 'literal string2' ">
             this text gets replaced by the output of some_run_mode
         </span>
 
@@ -644,7 +644,7 @@ BUGS
 
 SEE ALSO
         CGI::Application::Plugin::AnyTemplate::Base
-        CGI::Application::Plugin::AnyTemplate::Dispatcher
+        CGI::Application::Plugin::AnyTemplate::ComponentHandler
         CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate
         CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr
         CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit

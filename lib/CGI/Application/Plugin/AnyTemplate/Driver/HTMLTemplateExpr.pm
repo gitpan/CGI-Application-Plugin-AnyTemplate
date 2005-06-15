@@ -15,27 +15,27 @@ All C<AnyTemplate> drivers are designed to be used the same way.  For
 general usage instructions, see the documentation of
 L<CGI::Application::Plugin::AnyTemplate>.
 
-=head1 COMPONENT DISPATCH SYNTAX (HTML::Template::Expr)
+=head1 EMBEDDED COMPONENT SYNTAX (HTML::Template::Expr)
 
 =head2 Syntax
 
-The L<HTML::Template::Expr> syntax for component dispatch is:
+The L<HTML::Template::Expr> syntax for embedding components is:
 
-    <TMPL_VAR EXPR="CGIAPP_dispatch('some_run_mode', param1, param2, 'literal string3')">
+    <TMPL_VAR EXPR="CGIAPP_embed('some_run_mode', param1, param2, 'literal string3')">
 
 This can be overridden by the following configuration variables:
 
-    dispatch_tag_name       # default 'CGIAPP_dispatch'
+    embed_tag_name       # default 'CGIAPP_embed'
 
 For instance by setting the following value in your configuration file:
 
-    dispatch_tag_name       '__ACME_render'
+    embed_tag_name       '__ACME_render'
 
-Then the component dispatch tag will look like:
+Then the embedded component tag will look like:
 
     <TMPL_VAR EXPR="__ACME_render('some_run_mode')">
 
-The value of C<dispatch_tag_name> must consist of numbers, letters and
+The value of C<embed_tag_name> must consist of numbers, letters and
 underscores (C<_>), and must not begin with a number.
 
 =cut
@@ -43,7 +43,7 @@ underscores (C<_>), and must not begin with a number.
 use strict;
 use Carp;
 
-use CGI::Application::Plugin::AnyTemplate::Dispatcher;
+use CGI::Application::Plugin::AnyTemplate::ComponentHandler;
 
 use base 'CGI::Application::Plugin::AnyTemplate::Base';
 
@@ -54,10 +54,10 @@ accepts the following config parameters:
 
 =over 4
 
-=item dispatch_tag_name
+=item embed_tag_name
 
-The name of the tag used for component dispatch.  Defaults to
-C<CGIAPP_dispatch>.
+The name of the tag used for embedding components.  Defaults to
+C<CGIAPP_embed>.
 
 =item template_extension
 
@@ -90,7 +90,7 @@ All other configuration parameters are passed on unchanged to L<HTML::Template::
 
 sub driver_config_keys {
     qw/
-       dispatch_tag_name
+       embed_tag_name
        template_extension
        associate_query
     /;
@@ -99,7 +99,7 @@ sub driver_config_keys {
 sub default_driver_config {
     (
         template_extension => '.html',
-        dispatch_tag_name  => 'CGIAPP_dispatch',
+        embed_tag_name     => 'CGIAPP_embed',
         associate_query    => 1,
     );
 }
@@ -145,7 +145,7 @@ sub initialize {
     my $filename = $self->filename or croak "HTML::Template::Expr filename not specified";
     my $query    = $self->{'webapp'}->query or croak "HTML::Template::Expr webapp query not found";
 
-    my $dispatcher = $self->{'dispatcher_class'}->new(
+    my $component_handler = $self->{'component_handler_class'}->new(
         'webapp'              => $self->{'webapp'},
         'containing_template' => $self,
     );
@@ -155,7 +155,7 @@ sub initialize {
         filename  => $filename,
         path      => $self->{'include_paths'},
         functions => {
-            $self->{'driver_config'}{'dispatch_tag_name'} => sub { $dispatcher->dispatch(@_) },
+            $self->{'driver_config'}{'embed_tag_name'} => sub { $component_handler->embed(@_) },
         }
     );
     if ($self->{'driver_config'}{'associate_query'}) {
@@ -195,7 +195,7 @@ sub render_template {
 
     CGI::Application::Plugin::AnyTemplate
     CGI::Application::Plugin::AnyTemplate::Base
-    CGI::Application::Plugin::AnyTemplate::Dispatcher
+    CGI::Application::Plugin::AnyTemplate::ComponentHandler
     CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate
     CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit
     CGI::Application::Plugin::AnyTemplate::Driver::Petal

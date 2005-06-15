@@ -15,7 +15,7 @@ my $StyleSheet = "misc/style.css";
 
 my %HTML = (
     'CAP-AnyTemplate.html'                         => 'lib/CGI/Application/Plugin/AnyTemplate.pm',
-    'CAP-AnyTemplate-Dispatcher.html'              => 'lib/CGI/Application/Plugin/AnyTemplate/Dispatcher.pm',
+    'CAP-AnyTemplate-ComponentHandler.html'        => 'lib/CGI/Application/Plugin/AnyTemplate/ComponentHandler.pm',
     'CAP-AnyTemplate-Base.html'                    => 'lib/CGI/Application/Plugin/AnyTemplate/Base.pm',
     'CAP-AnyTemplate-Driver-HTMLTemplate.html'     => 'lib/CGI/Application/Plugin/AnyTemplate/Driver/HTMLTemplate.pm',
     'CAP-AnyTemplate-Driver-HTMLTemplateExpr.html' => 'lib/CGI/Application/Plugin/AnyTemplate/Driver/HTMLTemplateExpr.pm',

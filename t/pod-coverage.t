@@ -18,8 +18,8 @@ pod_coverage_ok(
 );
 
 pod_coverage_ok(
-        "CGI::Application::Plugin::AnyTemplate::Dispatcher",
-        {},
+        "CGI::Application::Plugin::AnyTemplate::ComponentHandler",
+        { also_private => [ qr/^(dispatch)|(dispatch_direct)$/ ], },
         "CAP::AnyTemplate::Base POD coverage",
 );
 pod_coverage_ok(

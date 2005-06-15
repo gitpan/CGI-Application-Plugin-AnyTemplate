@@ -13,10 +13,10 @@ my $Per_Template_Driver_Tests = 4;
     sub setup {
         my $self = shift;
         $self->header_type('none');
-        $self->start_mode('dispatch_start');
+        $self->start_mode('embed_start');
         $self->run_modes([qw/
-            dispatch_start
-            dispatch_non_existent_runmode_sub
+            embed_start
+            embed_non_existent_runmode_sub
         /]);
         $self->template->config(
             # default_type  => $self->param('template_driver'),
@@ -31,13 +31,13 @@ my $Per_Template_Driver_Tests = 4;
         );
     }
 
-    sub dispatch_start {
+    sub embed_start {
         my $self = shift;
 
         my $driver = $self->param('template_driver');
 
         my $template = $self->template->load(
-            'dispatch_error1',
+            'embed_error1',
         );
 
         my $output;
@@ -47,19 +47,19 @@ my $Per_Template_Driver_Tests = 4;
             $output = $template->output;
         };
 
-        ok($@, "Caught dispatch to non existent runmode");
-        like($@, qr/dispatch_non_existent_runmode.*listed/, "Caught dispatch to non existent runmode (error message ok)");
+        ok($@, "Caught embed to non existent runmode");
+        like($@, qr/embed_non_existent_runmode.*listed/, "Caught embed to non existent runmode (error message ok)");
 
         $template = $self->template->load(
-            'dispatch_error2',
+            'embed_error2',
         );
 
         eval {
             $output = $template->output;
         };
 
-        ok($@, "Caught dispatch to non existent runmode sub ");
-        like($@, qr/dispatch_non_existent_runmode.*sub/, "Caught dispatch to non existent runmode sub (error message ok)");
+        ok($@, "Caught embed to non existent runmode sub ");
+        like($@, qr/embed_non_existent_runmode.*sub/, "Caught embed to non existent runmode sub (error message ok)");
 
 
         '';

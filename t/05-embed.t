@@ -68,11 +68,11 @@ $Expected_Output{'Petal'}
     sub setup {
         my $self = shift;
         $self->header_type('none');
-        $self->start_mode('dispatch_outer');
+        $self->start_mode('embed_outer');
         $self->run_modes([qw/
-            dispatch_outer
-            dispatch_inner1
-            dispatch_inner2
+            embed_outer
+            embed_inner1
+            embed_inner2
         /]);
         $self->template->config(
             default_type  => $self->param('template_driver'),
@@ -87,7 +87,7 @@ $Expected_Output{'Petal'}
         );
     }
 
-    sub dispatch_outer {
+    sub embed_outer {
         my $self = shift;
 
         my $driver = $self->param('template_driver');
@@ -114,7 +114,7 @@ $Expected_Output{'Petal'}
         '';
     }
 
-    sub dispatch_inner1 {
+    sub embed_inner1 {
         my $self            = shift;
         my $parent_template = shift;
         my @params          = @_;
@@ -142,7 +142,7 @@ $Expected_Output{'Petal'}
         );
         return $template->output;
     }
-    sub dispatch_inner2 {
+    sub embed_inner2 {
         my $self            = shift;
         my $parent_template = shift;
         my @params          = @_;

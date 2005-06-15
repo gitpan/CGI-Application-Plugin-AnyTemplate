@@ -15,32 +15,32 @@ All C<AnyTemplate> drivers are designed to be used the same way.  For
 general usage instructions, see the documentation of
 L<CGI::Application::Plugin::AnyTemplate>.
 
-=head1 COMPONENT DISPATCH SYNTAX (Petal)
+=head1 EMBEDDED COMPONENT SYNTAX (Petal)
 
-B<Note that for component dispatch under Petal to work properly, you need to enclose>
+B<Note that for embedding component to work properly in Petal, you need to enclose>
 B<the contents of the included file in tags, such as C<< <span> >> tags.>
 
     <span>
     var: <span petal:replace="var"></span>
     </span>
 
-The C<Petal> syntax for component dispatch is:
+The C<Petal> syntax for embedding components is:
 
-    <span tal:replace="structure CGIAPP/dispatch 'some_run_mode' some_param1 some_param2 'some literal string 3'">
+    <span tal:replace="structure CGIAPP/embed 'some_run_mode' some_param1 some_param2 'some literal string 3'">
         this text gets replaced by the output of some_run_mode
     </span>
 
 This can be overridden by the following configuration variables:
 
-    dispatch_tag_name       # default 'CGIAPP'
+    embed_tag_name       # default 'CGIAPP'
 
 For instance by setting the following values in your configuration file:
 
-    dispatch_tag_name       'MYAPP'
+    embed_tag_name       'MYAPP'
 
-Then the component dispatch tag will look like:
+Then the embedded component tag will look like:
 
-    <span tal:replace="structure MYAPP/dispatch 'some_run_mode'">
+    <span tal:replace="structure MYAPP/embed 'some_run_mode'">
         this text gets replaced by the output of some_run_mode
     </span>
 
@@ -53,7 +53,7 @@ must be complete XML documents.
 use strict;
 use Carp;
 
-use CGI::Application::Plugin::AnyTemplate::Dispatcher;
+use CGI::Application::Plugin::AnyTemplate::ComponentHandler;
 
 use base 'CGI::Application::Plugin::AnyTemplate::Base';
 
@@ -64,9 +64,9 @@ accepts the following config parameters:
 
 =over 4
 
-=item dispatch_tag_name
+=item embed_tag_name
 
-The name of the tag used for component dispatch.  Defaults to
+The name of the tag used for embedding components.  Defaults to
 C<CGIAPP>.
 
 =item template_extension
@@ -98,7 +98,7 @@ All other configuration parameters are passed on unchanged to L<Petal>.
 
 sub driver_config_keys {
     qw/
-       dispatch_tag_name
+       embed_tag_name
        template_extension
        emulate_associate_query
     /;
@@ -107,7 +107,7 @@ sub driver_config_keys {
 sub default_driver_config {
     (
         template_extension      => '.xhtml',
-        dispatch_tag_name       => 'CGIAPP',
+        embed_tag_name          => 'CGIAPP',
         emulate_associate_query => 1,
     );
 }
@@ -165,8 +165,8 @@ If the param C<emulate_associate_query> is true, then set params for each of
 $self->{'webapp'}->query, mimicking L<HTML::Template>'s associate
 mechanism.
 
-Also set up a L<CGI::Application::Plugin::AnyTemplate::Dispatcher>
-object so that the C<CGIAPP.dispatch> callback will work.
+Also set up a L<CGI::Application::Plugin::AnyTemplate::ComponentHandler>
+object so that the C<CGIAPP.embed> callback will work.
 
 Returns the output of the filled template as a string reference.
 
@@ -193,13 +193,13 @@ sub render_template {
         }
     }
 
-    my $dispatcher = $self->{'dispatcher_class'}->new(
+    my $component_handler = $self->{'component_handler_class'}->new(
         'webapp'              => $self->{'webapp'},
         'containing_template' => $self,
     );
 
     my $params = $self->get_param_hash;
-    $params->{$driver_config->{'dispatch_tag_name'}} = $dispatcher;
+    $params->{$driver_config->{'embed_tag_name'}} = $component_handler;
 
     my $output = $template->process($params) || croak $template->error;
     return \$output;
@@ -209,7 +209,7 @@ sub render_template {
 
     CGI::Application::Plugin::AnyTemplate
     CGI::Application::Plugin::AnyTemplate::Base
-    CGI::Application::Plugin::AnyTemplate::Dispatcher
+    CGI::Application::Plugin::AnyTemplate::ComponentHandler
     CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate
     CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr
     CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit

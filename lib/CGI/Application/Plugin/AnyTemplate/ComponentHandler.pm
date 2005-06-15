@@ -1,20 +1,20 @@
 
-package CGI::Application::Plugin::AnyTemplate::Dispatcher;
+package CGI::Application::Plugin::AnyTemplate::ComponentHandler;
 
 =head1 NAME
 
-CGI::Application::Plugin::AnyTemplate::Dispatcher - Dispatch to run modes from within a template
+CGI::Application::Plugin::AnyTemplate::ComponentHandler - Embed run modes within a template
 
 =head1 DESCRIPTION
 
-This is a little helper module used by the
-L<CGI::Application::Plugin::AnyTemplate> to handle the actual dispatch
-of embedded components to the proper run modes.
+This is a little helper module used by
+L<CGI::Application::Plugin::AnyTemplate> to handle finding and running
+the run modes for embedded components, and returning their content.
 
 You shouldn't need to use this module directly unless you are adding
 support for a new template system.
 
-For information on component dispatch see the docs of
+For information on embedded components see the docs of
 L<CGI::Application::Plugin::AnyTemplate>.
 
 =cut
@@ -29,9 +29,9 @@ use Scalar::Util qw(weaken);
 
 =item new
 
-Creates a new C<CGI::Application::Plugin::AnyTemplate::Dispatcher> object.
+Creates a new C<CGI::Application::Plugin::AnyTemplate::ComponentHandler> object.
 
-    my $dispatcher = CGI::Application::Plugin::AnyTemplate::Dispatcher->new(
+    my $component_handler = CGI::Application::Plugin::AnyTemplate::ComponentHandler->new(
         webapp              => $webapp,
         containing_template => $template,
     );
@@ -62,21 +62,22 @@ sub new {
     return $self;
 }
 
-=item dispatch
+=item embed
 
 Runs the specified C<runmode> of the C<webapp> object.
 Returns the results of this call.
 
-Parameters passed to dispatch should be passed on to the run mode.
+Parameters passed to embed should be passed on to the run mode.
 
 If the results are a scalar reference, then the return value is
-dereferenced before returning.  This is the safest way of dispatching,
+dereferenced before returning.  This is the safest way of calling a run
+mode since you'll get the output as a string and return it as a string,
 but it involves returning potentially very large strings from
 subroutines.
 
 =cut
 
-sub dispatch {
+sub embed {
     my $self          = shift;
     my $run_mode_name = shift;
 
@@ -86,10 +87,10 @@ sub dispatch {
     my %run_modes = $webapp->run_modes;
 
     my $run_mode_sub = $run_modes{$run_mode_name}
-        or confess("Can't dispatch to run mode [$run_mode_name] in web app [$webapp]: run mode not listed in \$self->run_modes\n");
+        or confess("Can't embed run mode [$run_mode_name] in web app [$webapp]: run mode not listed in \$self->run_modes\n");
 
     unless (UNIVERSAL::can($webapp, $run_mode_sub)) {
-        confess("Can't dispatch to run mode [$run_mode_name] in web app [$webapp]: run mode sub ($run_mode_sub) not found\n");
+        confess("Can't embed run mode [$run_mode_name] in web app [$webapp]: run mode sub ($run_mode_sub) not found\n");
     }
 
     my $output = $webapp->$run_mode_sub($containing_template, @_);
@@ -102,26 +103,30 @@ sub dispatch {
     }
 }
 
+sub dispatch {
+    goto &embed;
+}
 
-=item dispatch_direct
+
+=item embed_direct
 
 Runs the specified C<runmode> of the C<webapp> object.
 Returns the results of this call.
 
-Parameters passed to dispatch should be passed on to the run mode.
+Parameters passed to embed_direct should be passed on to the run mode.
 
 Even if the result of this call is a scalar reference, the result
 is NOT dereferenced before returning it.
 
-If you call this method instead of dispatch, you should be careful to
-deal with the possibility that your results are a reference to a string
-and not the string itself.
+If you call this method instead of embed, you should be careful to deal
+with the possibility that your results are a reference to a string and
+not the string itself.
 
 =back
 
 =cut
 
-sub dispatch_direct {
+sub embed_direct {
     my $self          = shift;
     my $run_mode_name = shift;
 
@@ -131,12 +136,16 @@ sub dispatch_direct {
     my %run_modes = $webapp->run_modes;
 
     my $run_mode_sub = $run_modes{$run_mode_name}
-        or confess("Can't dispatch to run mode [$run_mode_name] in web app [$webapp]: run mode not listed in \$self->run_modes\n");
+        or confess("Can't embed run mode [$run_mode_name] in web app [$webapp]: run mode not listed in \$self->run_modes\n");
 
     unless (UNIVERSAL::can($webapp, $run_mode_sub)) {
-        confess("Can't dispatch to run mode [$run_mode_name] in web app [$webapp]: run mode sub ($run_mode_sub) not found\n");
+        confess("Can't embed run mode [$run_mode_name] in web app [$webapp]: run mode sub ($run_mode_sub) not found\n");
     }
     return $webapp->$run_mode_sub($containing_template, @_);
+}
+
+sub dispatch_direct {
+    goto &embed_direct;
 }
 
 =head1 AUTHOR

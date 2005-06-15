@@ -15,23 +15,23 @@ All C<AnyTemplate> drivers are designed to be used the same way.  For
 general usage instructions, see the documentation of
 L<CGI::Application::Plugin::AnyTemplate>.
 
-=head1 COMPONENT DISPATCH SYNTAX (Template::Toolkit)
+=head1 EMBEDDED COMPONENT SYNTAX (Template::Toolkit)
 
-The L<Template::Toolkit|Template> syntax for component dispatch is:
+The L<Template::Toolkit|Template> syntax for embedding components is:
 
-    [% CGIAPP.dispatch("some_run_mode", param1, param2, 'literal string3') %]
+    [% CGIAPP.embed("some_run_mode", param1, param2, 'literal string3') %]
 
 This can be overridden by the following configuration variables:
 
-    dispatch_tag_name       # default 'CGIAPP'
+    embed_tag_name       # default 'CGIAPP'
 
 For instance by setting the following values in your configuration file:
 
-    dispatch_tag_name       'MYAPP'
+    embed_tag_name       'MYAPP'
 
-Then the component dispatch tag will look like:
+Then the embedded component tag will look like:
 
-    [% MYAPP.dispatch("some_run_mode") %]
+    [% MYAPP.embed("some_run_mode") %]
 
 
 =head1 TT OBJECT CACHING (singleton support)
@@ -116,7 +116,7 @@ different C<include_paths>.
 use strict;
 use Carp;
 
-use CGI::Application::Plugin::AnyTemplate::Dispatcher;
+use CGI::Application::Plugin::AnyTemplate::ComponentHandler;
 
 use base 'CGI::Application::Plugin::AnyTemplate::Base';
 
@@ -127,9 +127,9 @@ accepts the following config parameters:
 
 =over 4
 
-=item dispatch_tag_name
+=item embed_tag_name
 
-The name of the tag used for component dispatch.  Defaults to
+The name of the tag used for embedding components.  Defaults to
 C<CGIAPP>.
 
 =item template_extension
@@ -182,7 +182,7 @@ sub driver_config_keys {
        storage_class
        object_caching
        cache_storage_keys
-       dispatch_tag_name
+       embed_tag_name
        template_extension
        emulate_associate_query
     /;
@@ -192,7 +192,7 @@ sub default_driver_config {
     (
         object_caching          => 1,
         template_extension      => '.tmpl',
-        dispatch_tag_name       => 'CGIAPP',
+        embed_tag_name          => 'CGIAPP',
         emulate_associate_query => 1,
     );
 }
@@ -265,8 +265,8 @@ If the param C<emulate_associate_query> is true, then set params for
 each of $self->{'webapp'}->query, mimicking L<HTML::Template>'s
 associate mechanism.
 
-Also set up a L<CGI::Application::Plugin::AnyTemplate::Dispatcher>
-object so that the C<CGIAPP.dispatch> callback will work.
+Also set up a L<CGI::Application::Plugin::AnyTemplate::ComponentHandler>
+object so that the C<CGIAPP.embed> callback will work.
 
 Returns the output of the filled template as a string reference.
 
@@ -296,13 +296,13 @@ sub render_template {
         }
     }
 
-    my $dispatcher = $self->{'dispatcher_class'}->new(
+    my $component_handler = $self->{'component_handler_class'}->new(
         'webapp'              => $self->{'webapp'},
         'containing_template' => $self,
     );
 
     my $params = $self->get_param_hash;
-    $params->{$driver_config->{'dispatch_tag_name'}} = $dispatcher;
+    $params->{$driver_config->{'embed_tag_name'}} = $component_handler;
 
     my $filename = $self->filename;
 
@@ -315,7 +315,7 @@ sub render_template {
 
     CGI::Application::Plugin::AnyTemplate
     CGI::Application::Plugin::AnyTemplate::Base
-    CGI::Application::Plugin::AnyTemplate::Dispatcher
+    CGI::Application::Plugin::AnyTemplate::ComponentHandler
     CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate
     CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr
     CGI::Application::Plugin::AnyTemplate::Driver::Petal
