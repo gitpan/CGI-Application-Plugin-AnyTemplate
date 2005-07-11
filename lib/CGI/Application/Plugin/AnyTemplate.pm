@@ -7,11 +7,11 @@ CGI::Application::Plugin::AnyTemplate - Use any templating system from within CG
 
 =head1 VERSION
 
-Version 0.06
+Version 0.07
 
 =cut
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 =head1 SYNOPSIS
 
@@ -809,7 +809,7 @@ sub _guess_template_filename {
 Fill is a convenience method which in a single step creates the
 template, fills it with the template paramters and returns its output.
 
-You can call it with or without a filename.
+You can call it with or without a filename (or string ref).
 
 The code:
 
@@ -818,6 +818,16 @@ The code:
 is equivalent to:
 
     my $template = $self->template->load('filename');
+    $template->output(\%params);
+
+
+And the code:
+
+    $self->template->fill(\$some_text, \%params);
+
+is equivalent to:
+
+    my $template = $self->template->load(\$some_text);
     $template->output(\%params);
 
 And the code:
@@ -835,11 +845,11 @@ is equivalent to:
 sub fill {
     my $self = shift;
 
-    my ($file, $params, $template);
+    my ($file_or_string, $params, $template);
 
     if (@_ == 2) {
-        ($file, $params) = @_;
-        $template = $self->load($file);
+        ($file_or_string, $params) = @_;
+        $template = $self->load($file_or_string);
     }
     else {
         ($params) = @_;

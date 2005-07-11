@@ -1,5 +1,9 @@
 Revision history for CGI-Application-Plugin-AnyTemplate
 
+0.07    July 10, 2005
+        - templates can also be created from strings via fill:
+             return $self->template->fill(\$some_text, \%params);
+
 0.06    July 10, 2005
         - allowed templates to be created from strings (works in all
           drivers except Petal):

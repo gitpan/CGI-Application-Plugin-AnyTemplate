@@ -2,7 +2,7 @@
 use strict;
 use Test::More 'no_plan';
 
-my $Per_Template_Driver_Tests = 3;
+my $Per_Template_Driver_Tests = 4;
 
 my %Expected_Output;
 my %Template_String;
@@ -96,12 +96,19 @@ EOF
         is($output, $expected_output, "[load(string => \\\$string)] Got expected output for driver: $driver");
 
         $template = $self->template->load(\$string);
-                $template->param(%params);
+        $template->param(%params);
 
         $output = $template->output;
         $output = $$output if ref $output eq 'SCALAR';
 
         is($output, $expected_output, "[load(\\\$string)] Got expected output for driver: $driver");
+
+        $output = $self->template->fill(\$string, \%params);
+
+        $output = $$output if ref $output eq 'SCALAR';
+
+        is($output, $expected_output, "[fill(\\\$string, \\%params)] Got expected output for driver: $driver");
+
 
         '';
     }

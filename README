@@ -3,7 +3,7 @@ NAME
     within CGI::Application using a unified interface
 
 VERSION
-    Version 0.06
+    Version 0.07
 
 SYNOPSIS
     In your CGI::Application-based webapp:
@@ -393,7 +393,7 @@ METHODS
     Fill is a convenience method which in a single step creates the
     template, fills it with the template paramters and returns its output.
 
-    You can call it with or without a filename.
+    You can call it with or without a filename (or string ref).
 
     The code:
 
@@ -402,6 +402,15 @@ METHODS
     is equivalent to:
 
         my $template = $self->template->load('filename');
+        $template->output(\%params);
+
+    And the code:
+
+        $self->template->fill(\$some_text, \%params);
+
+    is equivalent to:
+
+        my $template = $self->template->load(\$some_text);
         $template->output(\%params);
 
     And the code:
