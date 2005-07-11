@@ -157,6 +157,7 @@ C<CGI::Application::Plugin::AnyTemplate::Base> for details.
 #   $self->{'driver_config'}  # config info
 #   $self->{'include_paths'}  # the paths to search for the template file
 #   $self->filename           # the template file
+#   $self->string_ref         # ...or the template string
 #   $self->{'webapp'}->query  # for HTML::Template's 'associate' method,
 #                             # so that the query params are included
 #                             # in the template output
@@ -165,14 +166,24 @@ sub initialize {
 
     $self->_require_prerequisite_modules;
 
-    my $filename = $self->filename or croak "HTML::Template filename not specified";
+    my $string_ref = $self->string_ref;
+    my $filename   = $self->filename;
+
+    $string_ref or $filename or croak "HTML::Template: file or string must be specified";
+
     my $query    = $self->{'webapp'}->query or croak "HTML::Template webapp query not found";
 
     my %params = (
         %{ $self->{'native_config'} },
-        filename  => $filename,
         path      => $self->{'include_paths'},
     );
+
+    if ($filename) {
+        $params{'filename'} = $filename;
+    }
+    if ($string_ref) {
+        $params{'scalarref'} = $string_ref;
+    }
 
     if ($self->{'driver_config'}{'associate_query'}) {
         $params{'associate'} ||= $query;  # allow user to override associate with their own

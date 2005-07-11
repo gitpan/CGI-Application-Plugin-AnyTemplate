@@ -1,5 +1,13 @@
 Revision history for CGI-Application-Plugin-AnyTemplate
 
+0.06    July 10, 2005
+        - allowed templates to be created from strings (works in all
+          drivers except Petal):
+
+             $self->template->load(string => \$some_text);
+             $self->template->load(\$some_text);
+
+
 0.05    Jun 15, 2005
         - changed embedded components from 'dispatch' to 'embed' to
           avoid confusion with CGI::Application::Dispatch

@@ -29,6 +29,7 @@ sub _new {
     $self->{'native_config'}    = delete $args{'native_config'} || {};
     $self->{'include_paths'}    = delete $args{'include_paths'} || [];
     $self->{'filename'}         = delete $args{'filename'};
+    $self->{'string_ref'}       = delete $args{'string_ref'};
     $self->{'callers_package'}  = delete $args{'callers_package'};
     $self->{'webapp'}           = delete $args{'webapp'};
 
@@ -216,13 +217,24 @@ sub output {
 
 =item filename
 
-Get the template filename.
+If the template was loaded from a file, the C<filename> method returns the template filename.
 
 =cut
 
 sub filename {
     my $self = shift;
     return $self->{'filename'};
+}
+
+=item string_ref
+
+If the template was loaded from a string, the C<string_ref> method returns a reference to the string.
+
+=cut
+
+sub string_ref {
+    my $self = shift;
+    return $self->{'string_ref'};
 }
 
 =item object

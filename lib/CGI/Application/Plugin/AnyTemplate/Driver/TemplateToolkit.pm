@@ -304,9 +304,12 @@ sub render_template {
     my $params = $self->get_param_hash;
     $params->{$driver_config->{'embed_tag_name'}} = $component_handler;
 
-    my $filename = $self->filename;
+    my $filename   = $self->filename;
+    my $string_ref = $self->string_ref;
 
-    $template->process($self->filename, $params, \$output) || croak $template->error;
+    $string_ref or $filename or croak "TemplateToolkit: file or string must be specified";
+
+    $template->process(($string_ref || $filename), $params, \$output) || croak $template->error;
     return \$output;
 
 }

@@ -146,13 +146,28 @@ sub initialize {
 
     $self->_require_prerequisite_modules;
 
-    # TODO: check out how Petal caching work
+    # TODO: check out how Petal caching works
 
     my %config = %{ $self->{'native_config'}};
     $config{'base_dir'} = $self->{'include_paths'};
-    $config{'file'}     = $self->filename;
 
-    my $driver = Petal->new(%config);
+    my $filename   = $self->filename;
+    my $string_ref = $self->string_ref;
+
+
+    my $driver;
+    if ($filename) {
+        $config{'file'} = $filename;
+        $driver         = Petal->new(%config);
+    }
+    elsif ($string_ref) {
+        croak "Petal: creating templates from strings is not supported in Petal";
+    }
+    else {
+        croak "Petal: either file or string must be specified";
+    }
+
+
 
     $self->{'driver'} = $driver;
 }

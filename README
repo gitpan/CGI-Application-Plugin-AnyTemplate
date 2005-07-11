@@ -3,7 +3,7 @@ NAME
     within CGI::Application using a unified interface
 
 VERSION
-    Version 0.05
+    Version 0.06
 
 SYNOPSIS
     In your CGI::Application-based webapp:
@@ -329,9 +329,11 @@ METHODS
     type, the default template configuration, and it determines the name of
     the template based on the name of the current run mode.
 
-    If you call "load" with one paramter, it is taken to be the filename.
+    If you call "load" with one paramter, it is taken to be either the
+    filename or a reference to a string containing the template text:
 
         my $template = $self->template->load('somefile');
+        my $template = $self->template->load(\$some_text);
 
     If the parameter "auto_add_template_exension" is true, then the
     appropriate extension will be added for this template type.
@@ -349,14 +351,36 @@ METHODS
             },
         );
 
-    The configuration is merged with the configuration that was passed to
-    "config".
+    To initialize the template from a string rather than a file, use:
+
+        my $template = $self->template->load(
+            string =>  \$some_text,
+        );
+
+    The configuration parameters you pass to "load" are merged with the
+    configuration that was passed to "config".
 
     You can include any of the configuration parameters that you can pass to
     config, plus the following extra parameters:
 
     file
-        The template's filename.
+        If you are loading the template from a file, then the "file"
+        parameter contains the template's filename.
+
+    string
+        If you are loading the template from a string, then the "string"
+        parameter contains the text of the template. It can be either a
+        scalar or a reference to a scalar. Both of the following will work:
+
+            # passing a string
+            my $template = $self->template->load(
+                string => $some_text,
+            );
+
+            # passing a reference to a string
+            my $template = $self->template->load(
+                string => \$some_text,
+            );
 
     add_include_paths
         Additional include paths. These will be merged with "include_paths"

@@ -7,11 +7,11 @@ CGI::Application::Plugin::AnyTemplate - Use any templating system from within CG
 
 =head1 VERSION
 
-Version 0.05
+Version 0.06
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 =head1 SYNOPSIS
 
@@ -446,9 +446,11 @@ When you call C<load> with no parameters, it uses the default template
 type, the default template configuration, and it determines the name of
 the template based on the name of the current run mode.
 
-If you call C<load> with one paramter, it is taken to be the filename.
+If you call C<load> with one paramter, it is taken to be either the
+filename or a reference to a string containing the template text:
 
     my $template = $self->template->load('somefile');
+    my $template = $self->template->load(\$some_text);
 
 If the parameter C<auto_add_template_exension> is true, then the
 appropriate extension will be added for this template type.
@@ -466,8 +468,14 @@ you can specify filename and configuration paramters directly:
         },
     );
 
-The configuration is merged with the configuration that was passed to
-L<"config">.
+To initialize the template from a string rather than a file, use:
+
+    my $template = $self->template->load(
+        string =>  \$some_text,
+    );
+
+The configuration parameters you pass to C<load> are merged with the
+configuration that was passed to L<"config">.
 
 You can include any of the configuration parameters that you can pass to
 config, plus the following extra parameters:
@@ -476,7 +484,24 @@ config, plus the following extra parameters:
 
 =item file
 
-The template's filename.
+If you are loading the template from a file, then the C<file> parameter
+contains the template's filename.
+
+=item string
+
+If you are loading the template from a string, then the C<string> parameter
+contains the text of the template.  It can be either a scalar or a
+reference to a scalar.  Both of the following will work:
+
+    # passing a string
+    my $template = $self->template->load(
+        string => $some_text,
+    );
+
+    # passing a reference to a string
+    my $template = $self->template->load(
+        string => \$some_text,
+    );
 
 =item add_include_paths
 
@@ -501,10 +526,17 @@ sub load {
                 $config = $_[0];
             }
             else {
-                # args: single value (=filename)
-                $config = {
-                     'file' => $_[0],
-                };
+                # args: single value (=filename or string_ref)
+                if (ref $_[0] eq 'SCALAR') {
+                    $config = {
+                        'string' => $_[0],
+                    };
+                }
+                else {
+                    $config = {
+                        'file' => $_[0],
+                    };
+                }
             }
         }
         else {
@@ -565,8 +597,17 @@ sub load {
         }
     }
 
-    # guess template filename
-    my $filename = $self->_guess_template_filename($plugin_config, \%driver_config, $type, (caller($call_level))[3]);
+    my $string_ref;
+    if (exists $plugin_config->{'string'}) {
+        $string_ref = $plugin_config->{'string'} || '';
+        $string_ref = \$string_ref unless ref $string_ref;
+    }
+
+    # if no string, then guess template filename
+    my $filename;
+    unless ($string_ref) {
+        $filename = $self->_guess_template_filename($plugin_config, \%driver_config, $type, (caller($call_level))[3]);
+    }
 
     # create and initialize driver
 
@@ -575,6 +616,7 @@ sub load {
          'native_config'           => $native_config,
          'include_paths'           => $include_paths,
          'filename'                => $filename,
+         'string_ref'              => $string_ref,
          'callers_package'         => $plugin_config->{'callers_package'},
          'webapp'                  => $self->{'webapp'},
          'component_handler_class' => $plugin_config->{'component_handler_class'},
@@ -594,6 +636,7 @@ sub _plugin_config_keys {
         include_paths
         add_include_paths
         file
+        string
         component_handler_class
     /;
 }

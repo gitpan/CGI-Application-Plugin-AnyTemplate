@@ -142,7 +142,11 @@ sub initialize {
 
     $self->_require_prerequisite_modules;
 
-    my $filename = $self->filename or croak "HTML::Template::Expr filename not specified";
+    my $string_ref = $self->string_ref;
+    my $filename   = $self->filename;
+
+    $string_ref or $filename or croak "HTML::Template file or string must be specified";
+
     my $query    = $self->{'webapp'}->query or croak "HTML::Template::Expr webapp query not found";
 
     my $component_handler = $self->{'component_handler_class'}->new(
@@ -152,12 +156,19 @@ sub initialize {
 
     my %params = (
         %{ $self->{'native_config'} },
-        filename  => $filename,
         path      => $self->{'include_paths'},
         functions => {
             $self->{'driver_config'}{'embed_tag_name'} => sub { $component_handler->embed(@_) },
         }
     );
+
+    if ($filename) {
+        $params{'filename'} = $filename;
+    }
+    if ($string_ref) {
+        $params{'scalarref'} = $string_ref;
+    }
+
     if ($self->{'driver_config'}{'associate_query'}) {
         $params{'associate'} ||= $query;  # allow user to override associate with their own
     }
