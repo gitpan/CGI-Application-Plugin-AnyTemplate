@@ -7,11 +7,11 @@ CGI::Application::Plugin::AnyTemplate - Use any templating system from within CG
 
 =head1 VERSION
 
-Version 0.07
+Version 0.08
 
 =cut
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 =head1 SYNOPSIS
 
@@ -401,7 +401,7 @@ C<emulate_associate_query> (depending on the template system):
 sub config {
     my $self = shift;
 
-    my $config = ref $_[0] eq 'HASH' ? $_[0] : { @_ };
+    my $config = ref $_[0] eq 'HASH' ? { %{ $_[0] } } : { @_ };
 
     $config->{'callers_package'} = scalar caller;
 

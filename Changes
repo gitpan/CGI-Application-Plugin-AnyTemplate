@@ -1,5 +1,11 @@
 Revision history for CGI-Application-Plugin-AnyTemplate
 
+0.08    July 20, 2005
+        - fixed bug where keys of configuration hashref were clobbered,
+          so if you used the same config repeatedly (e.g. under
+          mod_perl), onlyt the first call would work.
+          (thanks to R.A. Jones)
+
 0.07    July 10, 2005
         - templates can also be created from strings via fill:
              return $self->template->fill(\$some_text, \%params);

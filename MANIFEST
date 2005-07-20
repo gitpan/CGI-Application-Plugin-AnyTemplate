@@ -32,6 +32,7 @@ t/12-tt_obj_caching_include_paths.t
 t/19-driver_errors.t
 t/20-exporter_renaming.t
 t/21-template_string.t
+t/22-non-clobbering-config.t
 t/pod-coverage.t
 t/pod.t
 t/tlib/CGI/Application/Plugin/AnyTemplate/Driver/MyCAPATDriver1.pm
@@ -53,6 +54,7 @@ t/tmpl/simple.xhtml
 t/tmpl/test.ext_HTMLTemplate
 t/tmpl/test.ext_Petal
 t/tmpl/test.ext_TemplateToolkit
+t/tmpl/test_template
 t/tmpl_include/cache_incl_paths_inner.tmpl
 t/tmpl_include/embed_inner1.html
 t/tmpl_include/embed_inner1.html_expr
