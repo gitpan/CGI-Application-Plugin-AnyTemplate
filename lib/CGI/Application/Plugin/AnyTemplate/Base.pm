@@ -214,13 +214,13 @@ sub output {
 
     my $webapp = $self->{'webapp'};
 
-    if ($webapp) {
+    if ($webapp and $webapp->can('call_hook')) {
         $webapp->call_hook('template_pre_process', $self);
     }
 
     my $output = $self->render_template;
 
-    if ($webapp) {
+    if ($webapp and $webapp->can('call_hook')) {
         my $output_param = $output;
         $output_param = \$output_param unless ref $output_param;
         $webapp->call_hook('template_post_process', $output_param);

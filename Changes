@@ -1,5 +1,12 @@
 Revision history for CGI-Application-Plugin-AnyTemplate
 
+0.10_02 July 25, 2005 [**DEVELOPER RELEASE**]
+        - wrapped usage of CGI::Application's callback system in
+
+            if ($webapp->can('call_hook')) { ... }
+
+          ...or equivalent, so CGI::Application 4.x is not required.
+
 0.10_01 July 25, 2005 [**DEVELOPER RELEASE**]
         - this version has several API changes that are not backwards compatible:
 

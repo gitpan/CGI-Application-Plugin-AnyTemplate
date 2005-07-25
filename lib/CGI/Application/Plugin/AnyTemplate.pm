@@ -7,11 +7,11 @@ CGI::Application::Plugin::AnyTemplate - Use any templating system from within CG
 
 =head1 VERSION
 
-Version 0.10_01
+Version 0.10_02
 
 =cut
 
-our $VERSION = '0.10_01';
+our $VERSION = '0.10_02';
 
 =head1 SYNOPSIS
 
@@ -167,9 +167,11 @@ our %EXPORT_TAGS = (load_tmpl => ['load_tmpl', @EXPORT]);
 
 our $CAPAT_Namespace = '__ANY_TEMPLATE';
 
-CGI::Application->new_hook('template_pre_process');
-CGI::Application->new_hook('template_post_process');
-CGI::Application->new_hook('load_tmpl');
+if (CGI::Application->can('new_hook')) {
+    CGI::Application->new_hook('template_pre_process');
+    CGI::Application->new_hook('template_post_process');
+    CGI::Application->new_hook('load_tmpl');
+}
 
 sub _new {
     my $proto     = shift;
