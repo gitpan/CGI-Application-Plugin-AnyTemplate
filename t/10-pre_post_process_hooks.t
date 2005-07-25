@@ -2,36 +2,22 @@
 use strict;
 use Test::More 'no_plan';
 
-my $Per_Template_Driver_Tests = 2;
+my $Per_Template_Driver_Tests = 1;
 
 my %Expected_Output;
 
-$Expected_Output{'associate'}{'__Default__'} = <<'EOF';
+$Expected_Output{'__Default__'} = <<'EOF';
 --begin--
-var1:query_value1
-var2:value2
-var3:query_value3
+fish1----alueVay1
+fish2----alueVay2
+fish3----alueVay3
 --end--
 EOF
 
-$Expected_Output{'associate'}{'Petal'} =
+$Expected_Output{'Petal'} =
 qq|<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
-$Expected_Output{'associate'}{'__Default__'}
-</html>|;
-
-$Expected_Output{'non_associate'}{'__Default__'} = <<'EOF';
---begin--
-var1:
-var2:value2
-var3:
---end--
-EOF
-
-$Expected_Output{'non_associate'}{'Petal'} =
-qq|<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-$Expected_Output{'non_associate'}{'__Default__'}
+$Expected_Output{'__Default__'}
 </html>|;
 
 {
@@ -45,68 +31,66 @@ $Expected_Output{'non_associate'}{'__Default__'}
         $self->header_type('none');
         $self->start_mode('simple');
         $self->run_modes([qw/simple/]);
-        $self->template('associate')->config(
-            default_type  => $self->param('template_driver'),
-            include_paths => 't/tmpl',
-
-            HTMLTemplate => {
-                associate_query => 1,
-            },
-            HTMLTemplateExpr => {
-                associate_query => 1,
-            },
-            TemplateToolkit => {
-                emulate_associate_query => 1,
-            },
-            Petal => {
-                emulate_associate_query => 1,
-            },
-        );
-        $self->template('non_associate')->config(
+        $self->template->config(
             default_type  => $self->param('template_driver'),
             include_paths => 't/tmpl',
         );
+        $self->add_callback('template_pre_process', \&my_tmpl_pre1);
+        $self->add_callback('template_pre_process', \&my_tmpl_pre2);
+        $self->add_callback('template_post_process', \&my_tmpl_post1);
+        $self->add_callback('template_post_process', \&my_tmpl_post2);
     }
 
     sub simple {
         my $self = shift;
 
         my $driver = $self->param('template_driver');
+        my $expected_output = $Expected_Output{$driver}
+                           || $Expected_Output{'__Default__'};
 
-        my $expected_output_associate = $Expected_Output{'associate'}{$driver}
-                           || $Expected_Output{'associate'}{'__Default__'};
-
-        my $expected_output_non_associate = $Expected_Output{'non_associate'}{$driver}
-                           || $Expected_Output{'non_associate'}{'__Default__'};
-
-
-        $self->query->param('var1' => 'query_value1');
-        $self->query->param('var2' => 'query_value2');
-        $self->query->param('var3' => 'query_value3');
-
-        my $template = $self->template('associate')->load;
-
+        my $template = $self->template->load;
         $template->param(
+            'var1' => 'value1',
             'var2' => 'value2',
+            'var3' => 'value3',
         );
-
         my $output = $template->output;
         $output = $$output if ref $output eq 'SCALAR';
 
-        is($output, $expected_output_associate, "Got expected output (using associated query) for driver: $driver");
-
-        $template = $self->template('non_associate')->load;
-
-        $template->param(
-            'var2' => 'value2',
-        );
-
-        $output = $template->output;
-        $output = $$output if ref $output eq 'SCALAR';
-
-        is($output, $expected_output_non_associate, "Got expected output (not associated with query) for driver: $driver");
-
+        is($output, $expected_output, "Got expected output for driver: $driver");
         '';
+    }
+
+    sub my_tmpl_pre1 {
+        my ($self, $template) = @_;
+        my $params = $template->get_param_hash;
+        foreach my $param (keys %$params) {
+            my $value = $template->param($param);
+            $value =~ s/value/aluevay/g;
+
+            $template->param($param, $value);
+        }
+
+    }
+    sub my_tmpl_pre2 {
+        my ($self, $template) = @_;
+        my $params = $template->get_param_hash;
+        foreach my $param (keys %$params) {
+            my $value = $template->param($param);
+            $value =~ s/v/V/g;
+
+            $template->param($param, $value);
+        }
+
+    }
+
+    sub my_tmpl_post1 {
+        my ($self, $text) = @_;
+        $$text =~ s/var/fish/g;
+    }
+    sub my_tmpl_post2 {
+        my ($self, $text) = @_;
+        $$text =~ s/:/----/g;
     }
 }
 

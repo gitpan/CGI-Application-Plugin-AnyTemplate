@@ -10,3 +10,4 @@ CVS
 ^changes.txt$
 ^[^/]*\.html$
 \.gz$
+\.tar$

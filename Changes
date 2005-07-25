@@ -1,5 +1,98 @@
 Revision history for CGI-Application-Plugin-AnyTemplate
 
+0.10_01 July 25, 2005 [**DEVELOPER RELEASE**]
+        - this version has several API changes that are not backwards compatible:
+
+          - template names used to be automatically determined from the name
+            of the calling subroutine:
+
+                sub my_runmode {
+                    my $self = shift;
+                    $self->other_method;
+                }
+                sub other_method {
+                    my $self = shift;
+                    $self->template->fill;  # loads 'other_method.html'
+                }
+
+            There were two problems with this method:
+               1. Not every subroutine or method is a run mode
+               2. Under debuggers, the name of the calling subroutine is
+                  often not available, so code that uses automatic
+                  template names can't be run under a debugger.
+
+            So now AnyTemplate has been changed to get the template name
+            from $self->get_current_runmode:
+
+                sub my_runmode {
+                    my $self = shift;
+                    $self->other_method;
+                }
+                sub other_method {
+                    my $self = shift;
+                    $self->template->fill;  # loads 'my_runmode.html'
+                }
+
+            If you want to pass control to another runmode and you want
+            $self->get_current_runmode to be updated, then you use the
+            new 'forward' method:
+
+                sub my_runmode {
+                    my $self = shift;
+                    return $self->forward('other_runmode');
+                }
+                sub other_runmode {
+                    my $self = shift;
+                    $self->template->fill;  # loads 'other_runmode.html'
+                }
+
+
+          - template_pre_process and template_post_process are no longer
+            called automatically.  Instead you must register them as
+            hooks.
+
+            $self->add_callback('template_pre_process', \&template_pre_process);
+            $self->add_callback('template_post_process', \&template_post_process);
+
+          - associate_query and emulate_associate_query have now been
+            disabled by default. Having this feature enabled by default
+            was a potential XSS (Cross Site Scripting) security risk.
+            The use of this feature is now deprecated.  The feature
+            will be removed in the future
+
+
+        - other changes:
+          - added option to override load_tmpl.  It is enabled by:
+
+              use CGI::Application::Plugin::AnyTemplate qw(load_tmpl);
+
+            When this feature is enabled, you can do the following:
+
+                $self->load_tmpl('somefile.txt',
+                    path => '/path/to/templates',
+                    %other_options
+                );
+
+            And this is translated into:
+
+                $self->template->load('somefile.txt',
+                    add_include_path => '/path/to/templates',
+                    HTMLTemplate     => \%other_options,
+                    auto_add_template_extension => 0,
+                );
+
+          - added support for the load_tmpl hook, compatible with the
+            one built into CGI::Application
+
+          - $self->tmpl_path is now merged into 'include_path'
+
+          - documentation for authors of plugins and re-usable applications
+
+          - documentation for why the automatic extension mechanism is there
+
+          - re-numbered some test scripts
+
+
 0.08    July 20, 2005
         - fixed bug where keys of configuration hashref were clobbered,
           so if you used the same config repeatedly (e.g. under

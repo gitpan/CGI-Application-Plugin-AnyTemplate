@@ -7,11 +7,11 @@ CGI::Application::Plugin::AnyTemplate - Use any templating system from within CG
 
 =head1 VERSION
 
-Version 0.08
+Version 0.10_01
 
 =cut
 
-our $VERSION = '0.08';
+our $VERSION = '0.10_01';
 
 =head1 SYNOPSIS
 
@@ -160,10 +160,16 @@ use Scalar::Util qw(weaken);
 
 use Clone;
 
-our @ISA    = 'Exporter';
-our @EXPORT = qw(template);
+our @ISA         = 'Exporter';
+our @EXPORT      = qw(template forward);
+our @EXPORT_OK   = qw(load_tmpl);
+our %EXPORT_TAGS = (load_tmpl => ['load_tmpl', @EXPORT]);
 
 our $CAPAT_Namespace = '__ANY_TEMPLATE';
+
+CGI::Application->new_hook('template_pre_process');
+CGI::Application->new_hook('template_post_process');
+CGI::Application->new_hook('load_tmpl');
 
 sub _new {
     my $proto     = shift;
@@ -289,6 +295,31 @@ it, pass a value of zero:
         auto_add_template_extension => 0,
     );
 
+The automatic extension feature is not just there to save typing - it's
+actually there so you can have templates of different types sitting in
+the same directory.
+
+    sub my_runmode {
+        my $self = shift;
+        $self->template->fill;
+    }
+
+Then in your template path you can have three files:
+
+    my_runmode.html
+    my_runmode.tmpl
+    my_runmode.xhtml
+
+Then you can change which templates is used by changing the value of
+C<type> that you pass to C<< $self->template->config >>.
+
+For applications that want to dynamically choose their template system
+without changing app code, it's a cleaner solution to use the extensions
+than trying to swap template paths at runtime.  Even if you keep each
+type of template in its own directory, it's simpler to include all
+the directories all the time and use different extensions for different
+template types.
+
 =item component_handler_class
 
 Normally, component embedding is handled by
@@ -361,8 +392,10 @@ drivers:
 
 =head3 Copying Query data into Templates
 
-By default, all data in C<< $self->query >> are copied into the template
-object before the template is processed.
+B<This feature is now deprecated and will be removed in a future release.>
+
+When you enable this feature all data in C<< $self->query >> are copied
+into the template object before the template is processed.
 
 For the C<HTMLTemplate> and C<HTMLTemplateExpr> drivers this is done
 with the C<associate> feature of L<HTML::Template> and
@@ -375,25 +408,67 @@ L<HTML::Template::Expr>, respectively:
 For the other systems, this feature is emulated, by copying the query
 params into the template params before the template is processed.
 
-To disable this feature, pass a false value to C<associate_query> or
+To enable this feature, pass a true value to C<associate_query> or
 C<emulate_associate_query> (depending on the template system):
 
     $self->template->config(
         default_type => 'HTMLTemplate',
         HTMLTemplate => {
-            associate_query => 0,
+            associate_query => 1,
         },
         HTMLTemplateExpr => {
-            associate_query => 0,
+            associate_query => 1,
         },
         TemplateToolkit => {
-            emulate_associate_query => 0,
+            emulate_associate_query => 1,
         },
         Petal => {
-            emulate_associate_query => 0,
+            emulate_associate_query => 1,
         },
     );
 
+The reason this feature is now disabled by default is that it
+poses a potential XSS (Cross Site Scripting) security risk.
+
+The reason this feature is now deprecated is that in an ideal world
+developers shouldn't have to flatten objects and hashes in order to make
+them available to their templates. They should be able to pass the query
+object (or another object such as a config object) directly into the
+template:
+
+    $template->param(
+        'query' => $self->query,
+        'cfg'   => $self->cfg,
+        'ENV'   => $ENV,
+    );
+
+And in the template retrieve parameters directly:
+
+    your username: [% query.param('username') %]
+    administrator: [% cfg.admin %]
+    hostname:      [% ENV.SERVER_NAME %]
+
+For now, this approach works with L<Template::Toolkit|Template> and
+L<Petal>, but it does not work with L<HTML::Template>.  This situation
+may change in the future.  In the meantime, if you want to pass to an
+L<HTML::Template> an object that has a C<param> method, you can use the
+C<associate> feature:
+
+    $template->config(
+        HTMLTemplate => {
+            associate => $self->query,
+        }
+    );
+
+Note that C<associate> and C<associate_query> are not compatible.  So if
+you want to associate the query and an additional object, pass a list to
+C<associate>:
+
+    $template->config(
+        HTMLTemplate => {
+            associate => [$self->query, $self->conf]
+        }
+    );
 
 
 =cut
@@ -444,7 +519,10 @@ This can be as simple (and magical) as:
 
 When you call C<load> with no parameters, it uses the default template
 type, the default template configuration, and it determines the name of
-the template based on the name of the current run mode.
+the template based on the name of the current run mode.  (It determines
+the current run mode by calling C<< $self->get_current_runmode >>.  See
+below under C<forward> for how to update this value when changing run
+modes.)
 
 If you call C<load> with one paramter, it is taken to be either the
 filename or a reference to a string containing the template text:
@@ -545,13 +623,7 @@ sub load {
         }
     }
 
-    # Where we get our subroutine name from.  Usually from the subroutine
-    # immediately above us, but occasionally from further up
-    # (such as when we are called from fill or process)
-    my $call_level = delete $config->{'call_level'} || 1;
-
     # set current configuration from base
-
 
     if (keys %$config) {
         $self->{'current_config'} = Clone::clone($self->{'base_config'});
@@ -563,9 +635,6 @@ sub load {
 
     my $plugin_config = $self->{'current_config'}{'plugin_config'};
 
-    # manage include paths
-
-    my $include_paths = $self->_merged_include_paths($plugin_config);
 
     # determine template type
 
@@ -597,6 +666,7 @@ sub load {
         }
     }
 
+    # Get the string, if supplied
     my $string_ref;
     if (exists $plugin_config->{'string'}) {
         $string_ref = $plugin_config->{'string'} || '';
@@ -606,8 +676,29 @@ sub load {
     # if no string, then guess template filename
     my $filename;
     unless ($string_ref) {
-        $filename = $self->_guess_template_filename($plugin_config, \%driver_config, $type, (caller($call_level))[3]);
+        $filename = $self->_guess_template_filename($plugin_config, \%driver_config, $type, $self->{'webapp'}->get_current_runmode);
     }
+
+
+    # call load_tmpl hook
+    my %tmpl_params;
+    if ($self->{'webapp'}->can('call_hook')) {
+        my %ht_params = (
+           'path' => $plugin_config->{'add_include_paths'},
+        );
+        $self->{'webapp'}->call_hook(
+            'load_tmpl',
+            \%ht_params,
+            \%tmpl_params,
+            $filename,
+        );
+        $plugin_config->{'add_include_paths'} = $ht_params{'path'};
+    }
+
+
+    # manage include paths
+
+    my $include_paths = $self->_merged_include_paths($plugin_config);
 
     # create and initialize driver
 
@@ -621,6 +712,11 @@ sub load {
          'webapp'                  => $self->{'webapp'},
          'component_handler_class' => $plugin_config->{'component_handler_class'},
     );
+
+    # Store the tmpl params we picked up from the load_tmpl hook
+    if (keys %tmpl_params) {
+        $driver->param(%tmpl_params);
+    }
 
     return $driver;
 
@@ -727,11 +823,21 @@ sub _add_configuration {
 sub _merged_include_paths {
     my ($self, $config) = @_;
 
+    my @include_paths;
+
+    if (my $tmpl_path = $self->{'webapp'}->tmpl_path) {
+        if (ref $tmpl_path ne 'ARRAY') {
+            $tmpl_path = [ $tmpl_path ];
+        }
+        push @include_paths, @$tmpl_path;
+    }
+
     if ($config->{'include_paths'} and ref $config->{'include_paths'} ne 'ARRAY') {
         $config->{'include_paths'} = [ $config->{'include_paths'} ];
     }
+    push @include_paths, @{ $config->{'include_paths'} || [] };
 
-    my @include_paths     = @{ $config->{'include_paths'} || [] };
+
 
     $config->{'add_include_paths'} ||= [];
     $config->{'add_include_paths'} = [$config->{'add_include_paths'}] unless ref $config->{'add_include_paths'} eq 'ARRAY';
@@ -779,17 +885,15 @@ sub _require_driver {
 }
 
 sub _guess_template_filename {
-    my ($self, $plugin_config, $driver_config, $type, $calling_sub) = @_;
+    my ($self, $plugin_config, $driver_config, $type, $crm) = @_;
 
     my $filename;
     if (exists $plugin_config->{'file'}) {
         $filename = $plugin_config->{'file'};
     }
     else {
-        # split off subroutine name from package name
-        $filename = substr(
-            $calling_sub, rindex($calling_sub, '::') + 2
-        );
+        # filename set to current run mode
+        $filename = $crm;
     }
 
     if ($plugin_config->{'auto_add_template_extension'}) {
@@ -853,9 +957,7 @@ sub fill {
     }
     else {
         ($params) = @_;
-        $template = $self->load(
-            call_level => 2,
-        );
+        $template = $self->load;
     }
 
     $params ||= {};
@@ -873,14 +975,210 @@ sub process {
     goto &fill;
 }
 
+=head1 APPLICATION METHODS
+
+These methods are called directly on your application's C<$self> object.
+
+=head2 load_tmpl
+
+This is an emulation of L<CGI::Application>'s built-in C<load_tmpl>
+method.  For instance:
+
+    $self->load_tmpl('some_template.html');
+
+It is not exported by default.  To enable it, use:
+
+    use CGI::Application::Plugin::AnyTemplate qw/:load_tmpl/;
+
+You can call it the same way as documented in C<CGI::Application> and it
+will have the same effect.  However, it will respect the current
+template C<type>, so you can still use it to fill templates of different
+backends.
+
+The idea is that you can take an existing L<CGI::Application>-based
+webapp which uses C<HTML::Template> templates, and add the following
+code to it:
+
+    use CGI::Application::Plugin::AnyTemplate qw/:load_tmpl/;
+
+    sub setup {
+        my $self = shift;
+        $self->template->config(type => TemplateToolkit);
+    }
+
+This will change all existing calls to load_tmpl within your application
+to use L<Template::Toolkit|Template> based templates.
+
+Calling:
+
+    my $template = $self->load_tmpl('some_template.html');
+
+It is the equivalent of calling:
+
+    my $template = $self->template->load(
+        file => 'some_template.html',
+        auto_add_template_extension => 0,
+    );
+
+If you add extra options to C<load_tmpl>, these will be assumed to be
+L<HTML::Template> specific options, with the exception of the C<path>
+option, which will be extracted and used as 'add_include_path':
+
+    my $template = $self->load_tmpl('some_template.html',
+        cache => 0,
+        path  => '/path/to/templates',
+    );
+
+This will get translated into:
+
+    my $template = $self->template->load(
+        file => 'some_template.html',
+        auto_add_template_extension => 0,
+        add_include_path => '/path/to/templates',
+        HTMLTemplate => {
+            cache => 0,
+        }
+    );
+
+Note that if you specify any L<HTML::Template>-specific options here,
+they will completely overwrite any options that you passed to config.
+
+Some notes and caveats about using the C<load_tmpl> method:
+
+=over 4
+
+=item *
+
+This method only works for the default template configuration (i.e. C<< $self->template() >>).
+If you set up a named configuration (e.g. C<< $self->template('myconfig') >>)
+there is no way to access it with C<load_tmpl>.  Since plugins should be
+using named configurations, this means that the C<load_tmpl> method
+should not be used by plugins.  See L<"NOTES FOR AUTHORS OF PLUGINS AND REUSABLE APPLICATIONS">,
+below.
+
+=item *
+
+The C<load_tmpl> method does not automatically add an extension to the
+filename you pass to it, even if you have C<auto_add_template_extension>
+set to a true value in your call to C<< $self->template->config >>.
+
+=back
+
+=cut
+
+sub load_tmpl {
+    my ($self, $filename, %ht_options) = @_;
+
+    my %params = (
+        file         => $filename,
+        auto_add_template_extension => 0,
+        HTMLTemplate => \%ht_options,
+    );
+
+    my $path = delete $ht_options{'path'};
+
+    if ($path) {
+        $params{'add_include_paths'} = $path;
+    }
+
+    return $self->template->load(%params);
+}
+
+=head2 forward
+
+The forward method passes control to another run mode and returns its
+output.  This is equivalent to calling C<< $self->$other_runmode >>,
+except that L<CGI::Application>'s internal value of the current run mode
+is updated.
+
+This means that calling C<< $self->get_current_runmode >> after calling
+C<forward> will return the name of the new run mode.  This is useful for
+controlling how C<< $self->template->load >> determines the template.
+
+For instance, this is how to pass control to another method without changing the current run mode:
+
+    sub setup {
+        my $self = shift;
+        $self->run_modes(qw/my_runmode/);
+    }
+    sub my_runmode {
+        my $self = shift;
+        return $self->other_method('foo', 'bar', 'baz');
+    }
+    sub other_method {
+        my $self = shift;
+        my @params = @_; # 'foo', 'bar', 'baz'
+
+        my $rm = $self->get_current_runmode;  # 'my_runmode'
+
+        $self->template->fill;  # loads 'my_runmode.html'
+    }
+
+And this is how to pass control to another run mode while updating the value
+of C<current_run_mode>:
+
+    sub setup {
+        my $self = shift;
+        $self->run_modes({
+            my_runmode    => 'my_runmode',
+            other_action  => 'other_method',
+        });
+    }
+    sub my_runmode {
+        my $self = shift;
+        return $self->forward('other_action', 'foo', 'bar', 'baz');
+    }
+    sub other_method {
+        my $self = shift;
+        my @params = @_;  # 'foo', 'bar', 'baz'
+
+        my $rm = $self->get_current_runmode;  # 'other_action'
+
+        $self->template->fill;  # loads 'other_action.html'
+    }
+
+Note that forward accepts the I<name> of the run mode (in this case
+I<'other_action'>), which might not be the same as the name of the
+method that handles the run mode (in this case I<'other_method'>)
+
+
+=cut
+
+sub forward {
+    my $self     = shift;
+    my $run_mode = shift;
+
+    my %rm_map = $self->run_modes;
+    if (not exists $rm_map{$run_mode}) {
+        croak "run mode $run_mode does not exist";
+    }
+    my $method = $rm_map{$run_mode};
+    $self->{__CURRENT_RUNMODE} = $run_mode;
+    return $self->$method(@_);
+}
+
+=head2 tmpl_path
+
+You can set the template C<include_paths> by calling
+C<< $self->tmpl_path('/path/to/templates') >>.
+
+You can also do so by passing a value to the C<TMPL_PATH> parameter to
+your application's C<new> method:
+
+    my $webapp = App->new(
+        TMPL_PATH => '/path/to/templates',
+    );
+
+Paths that you set via C<tmpl_path>/C<TMPL_PATH> will be put B<last> in
+the list of include paths, after C<add_include_paths> and
+C<include_paths>.
+
 =head1 DRIVER METHODS
 
 These are the most commonly used methods of the C<AnyTemplate> driver
 object.  The driver is what you get back from calling C<< $self->template->load >>.
 
-=over 4
-
-=item param
+=head2 param
 
 The C<param> method gets and sets values within the template.
 
@@ -899,7 +1197,7 @@ The C<param> method gets and sets values within the template.
 It is designed to behave similarly to the C<param> method in other modules like
 L<CGI> and L<HTML::Template>.
 
-=item get_param_hash
+=head2 get_param_hash
 
 Returns the template variables as a hash of names and values.
 
@@ -912,7 +1210,7 @@ internally to contain the values:
 
     $params_ref->{'foo'} = 'bar';  # directly change parameter 'foo'
 
-=item output
+=head2 output
 
 Returns the template with all the values filled in.
 
@@ -923,18 +1221,85 @@ You can also supply names and values to the template at this stage:
     return $template->output('name' => 'value', 'name2' => 'value2');
 
 
-=back
-
+When you call the C<output> method, any components embedded in the
+template are run.  See L<"EMBEDDED COMPONENTS">, below.
 
 =head1 PRE- AND POST- PROCESS
 
-Before the template output is generated, your application's
-C<< $self->template_pre_process >> method is called.
-This method is passed a reference to the C<$template> object.
+There are several ways to customize the template process.  You can
+modify the template parameters before the template is filled, and you
+can modify the output of the template after it has been filled.
 
-It can modify the parameters passed into the template by using the C<param> method:
+Multiple applications and plugins can hook into the template process
+pipeline, each making changes to the template input and output.
 
-    sub template_pre_process {
+For instance, it will be possible to make a general-purpose
+C<CGI::Application> plugin that adds arbitrary data to each new
+template (such as query parameters or configuration data).
+
+Note that the API has changed for version 0.10 in a
+non-backwards-compatible way in order to use the new hook system
+provided by recent versions of C<CGI::Application>.
+
+=head2 The load_tmpl hook
+
+The C<load_tmpl> hook is designed to be compatible with the C<load_tmpl>
+hook defined by C<CGI::Application> itself.
+
+The C<load_tmpl> hook is called before the template object is created.
+Any callbacks that you register to this hook will be called before each
+template is loaded.  Register a C<load_tmpl> callback with:
+
+   $self->add_callback('load_tmpl',\&my_load_tmpl);
+
+When the C<load_tmpl> callback is executed it will be passed three
+arguments (I<adapted from the> L<CGI::Application> I<docs>):
+
+ 1. A hash reference of the extra params passed into C<load_tmpl>
+    (ignored by AnyTemplate with the exception of 'path')
+
+ 2. Followed by a hash reference to template parameters.
+    You can modify this hash by reference to affect values that are
+    actually passed to the param() method of the template object.
+
+ 3. The name of the template file.
+
+Here's an example stub for a load_tmpl() callback:
+
+    sub my_load_tmpl_callback {
+        my ($self, $ht_params, $tmpl_params, $tmpl_file) = @_;
+        # modify $tmpl_params by reference...
+    }
+
+Currently, of all the params in C<$ht_params>, all but 'path' are
+ignored, because these are specific to C<HTML::Template>.  If you want to
+write a generic callback that needs to be able to access or modify
+C<HTML::Template> parameters then let me know, or add a feature request
+on L<http://rt.cpan.org>.
+
+The C<path> param of C<$ht_params> is initially set to the value of
+C<add_include_path> (if set).  Your callback can modify the C<path>
+param, and C<add_include_param> will be set to the result.
+
+Plugin authors who want to provide template processing features are
+encouraged to use the 'load_tmpl' hook when possible, since it will work
+both with AnyTemplate and with L<CGI::Application>'s built-in
+C<load_tmpl>.
+
+=head2 The template_pre_process and template_post_process hooks
+
+Before the template output is generated, the C<< template_pre_process >>
+hook is called.  Any callbacks that you register to this hook will be
+called before each template is processed.  Register a
+C<template_pre_process> callback as follows:
+
+    $self->add_callback('template_pre_process', \&my_tmpl_pre_process);
+
+Pre-process callbacks will be passed a reference to the C<$template>
+object, and can can modify the parameters passed into the template by
+using the C<param> method:
+
+    sub my_tmpl_pre_process {
         my ($self, $template) = @_;
 
         # Change the internal template parameters by reference
@@ -950,20 +1315,22 @@ It can modify the parameters passed into the template by using the C<param> meth
     }
 
 
-After the template output is generated, your application's
-C<< $self->template_post_process >> method is called.
-This method is passed a reference to the template object and a reference
-to the output generated by the template.  You can modify this output:
+After the template output is generated, the C<template_post_process> hook is called.
+You can register a C<template_post_process> callback as follows:
 
-    sub template_post_process {
+    $self->add_callback('template_post_process', \&my_tmpl_post_process);
+
+Any callbacks that you register to this hook will be called after each
+template is processed, and will be passed both a reference to the
+template object and a reference to the output generated by the template.
+This allows you to modify the output of the template:
+
+    sub my_tmpl_post_process {
         my ($self, $template, $output_ref) = @_;
 
         $$output_ref =~ s/foo/bar/;
     }
 
-
-When you call the C<output> method, any components embedded in the
-template are run.  See L<"EMBEDDED COMPONENTS">, below.
 
 
 =head1 EMBEDDED COMPONENTS
@@ -1070,6 +1437,53 @@ L<Petal> syntax:
 
 =cut
 
+
+=head1 NOTES FOR AUTHORS OF PLUGINS AND REUSABLE APPLICATIONS
+
+If you are writing a L<CGI::Application> plugin module, or you are
+writing a C<CGI::Application> program that will be distributed to other
+people (e.g. on CPAN), then it's important to take steps to prevent your
+application's use of L<CGI::Application::Plugin::AnyTemplate> from
+conflicting with other plugins or with your end users.
+
+When a plugin that uses L<CGI::Application::Plugin::AnyTemplate> calls:
+
+   $self->template->config(...)
+
+It overwrites any existing template configuration with the new settings.
+So if two plugins do that, they probably clobber each other.
+
+However, L<CGI::Application::Plugin::AnyTemplate> has the feature of
+named independent configs:
+
+   $self->template('your_module')->config(...)
+   $self->template('my_plugin')->config(...)
+
+These configs remain separate from each other.  However, you have to
+keep using these names throughout your module, even when you load and
+fill the template.  For instance:
+
+   sub my_runmode {
+       my $self = shift;
+       my $template = $self->template('my_plugin')->load;
+       $template->output;
+   }
+
+   sub your_runmode {
+       my $self = shift;
+       my %params;
+       $self->template('your_module')->fill(\%params);
+   }
+
+It's uglier and more verbose, but it also prevents plugins from
+stepping on each other's toes.
+
+L<CGI::Application> plugins that use
+L<CGI::Application::Plugin::AnyTemplate> should default to
+using their own package name for the AnyTemplate config name:
+
+   $self->template(__PACKAGE__)->config(...);
+   $self->template(__PACKAGE__)->fill(...);
 
 =head1 CHANGING THE NAME OF THE 'template' METHOD
 

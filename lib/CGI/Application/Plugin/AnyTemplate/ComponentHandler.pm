@@ -84,16 +84,13 @@ sub embed {
     my $webapp              = $self->{'webapp'};
     my $containing_template = $self->{'containing_template'};
 
-    my %run_modes = $webapp->run_modes;
-
-    my $run_mode_sub = $run_modes{$run_mode_name}
-        or confess("Can't embed run mode [$run_mode_name] in web app [$webapp]: run mode not listed in \$self->run_modes\n");
-
-    unless (UNIVERSAL::can($webapp, $run_mode_sub)) {
-        confess("Can't embed run mode [$run_mode_name] in web app [$webapp]: run mode sub ($run_mode_sub) not found\n");
+    my $output;
+    eval {
+        $output = $webapp->forward($run_mode_name, $containing_template, @_);
+    };
+    if ($@) {
+        confess("Error embedding run mode [$run_mode_name] in web app [$webapp]: $@\n");
     }
-
-    my $output = $webapp->$run_mode_sub($containing_template, @_);
 
     if (ref $output eq 'SCALAR') {
         return $$output;
@@ -133,15 +130,9 @@ sub embed_direct {
     my $webapp              = $self->{'webapp'};
     my $containing_template = $self->{'containing_template'};
 
-    my %run_modes = $webapp->run_modes;
-
-    my $run_mode_sub = $run_modes{$run_mode_name}
-        or confess("Can't embed run mode [$run_mode_name] in web app [$webapp]: run mode not listed in \$self->run_modes\n");
-
-    unless (UNIVERSAL::can($webapp, $run_mode_sub)) {
-        confess("Can't embed run mode [$run_mode_name] in web app [$webapp]: run mode sub ($run_mode_sub) not found\n");
-    }
-    return $webapp->$run_mode_sub($containing_template, @_);
+    # I'd like to have some error handling here, but wrapping this in
+    # an eval makes return stop working :(
+    return $webapp->forward($run_mode_name, $containing_template, @_);
 }
 
 sub dispatch_direct {

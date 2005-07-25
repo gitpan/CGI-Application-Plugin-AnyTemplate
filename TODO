@@ -1,8 +1,12 @@
 
 TODO
-- allow native syntax for include paths to also work in addition to the
-  include_paths param
-- pick up on $self->tmpl_path
-- allow option to override $app->load_tmpl
+- [under debate] allow native syntax for include paths to also work in
+  addition to the include_paths param
+
+- improve handling of config params (avoid copious copying of hashes)
+- possibly remove dependency on Clone
+
+- emulate creating template from string in Petal
 - CPAN installer that lets you pick your template driver(s)
 - find out how to make subclassing of CAP::AT possible
+

@@ -68,6 +68,8 @@ the C<template_extension> is C<.html>.
 
 =item associate_query
 
+B<This feature is now deprecated and will be removed in a future release.>
+
 If this config parameter is true, then
 L<CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr> will
 copy all of the webapp's query params into the template using
@@ -77,7 +79,7 @@ L<HTML::Template::Expr>'s C<associate> mechanism:
         associate => $self->query,
     );
 
-By default C<associate_query> is true.
+By default C<associate_query> is false.
 
 If you provide an C<associate> config parameter of your own, that will
 disable the C<associate_query> functionality.
@@ -100,7 +102,7 @@ sub default_driver_config {
     (
         template_extension => '.html',
         embed_tag_name     => 'CGIAPP_embed',
-        associate_query    => 1,
+        associate_query    => 0,
     );
 }
 

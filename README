@@ -3,7 +3,7 @@ NAME
     within CGI::Application using a unified interface
 
 VERSION
-    Version 0.08
+    Version 0.10_01
 
 SYNOPSIS
     In your CGI::Application-based webapp:
@@ -226,6 +226,31 @@ METHODS
                 auto_add_template_extension => 0,
             );
 
+        The automatic extension feature is not just there to save typing -
+        it's actually there so you can have templates of different types
+        sitting in the same directory.
+
+            sub my_runmode {
+                my $self = shift;
+                $self->template->fill;
+            }
+
+        Then in your template path you can have three files:
+
+            my_runmode.html
+            my_runmode.tmpl
+            my_runmode.xhtml
+
+        Then you can change which templates is used by changing the value of
+        "type" that you pass to "$self->template->config".
+
+        For applications that want to dynamically choose their template
+        system without changing app code, it's a cleaner solution to use the
+        extensions than trying to swap template paths at runtime. Even if
+        you keep each type of template in its own directory, it's simpler to
+        include all the directories all the time and use different
+        extensions for different template types.
+
     component_handler_class
         Normally, component embedding is handled by
         CGI::Application::Plugin::AnyTemplate::ComponentHandler. If you want
@@ -285,8 +310,10 @@ METHODS
     CGI::Application::Plugin::AnyTemplate::Driver::Petal
 
    Copying Query data into Templates
-    By default, all data in "$self->query" are copied into the template
-    object before the template is processed.
+    This feature is now deprecated and will be removed in a future release.
+
+    When you enable this feature all data in "$self->query" are copied into
+    the template object before the template is processed.
 
     For the "HTMLTemplate" and "HTMLTemplateExpr" drivers this is done with
     the "associate" feature of HTML::Template and HTML::Template::Expr,
@@ -299,23 +326,65 @@ METHODS
     For the other systems, this feature is emulated, by copying the query
     params into the template params before the template is processed.
 
-    To disable this feature, pass a false value to "associate_query" or
+    To enable this feature, pass a true value to "associate_query" or
     "emulate_associate_query" (depending on the template system):
 
         $self->template->config(
             default_type => 'HTMLTemplate',
             HTMLTemplate => {
-                associate_query => 0,
+                associate_query => 1,
             },
             HTMLTemplateExpr => {
-                associate_query => 0,
+                associate_query => 1,
             },
             TemplateToolkit => {
-                emulate_associate_query => 0,
+                emulate_associate_query => 1,
             },
             Petal => {
-                emulate_associate_query => 0,
+                emulate_associate_query => 1,
             },
+        );
+
+    The reason this feature is now disabled by default is that it poses a
+    potential XSS (Cross Site Scripting) security risk.
+
+    The reason this feature is now deprecated is that in an ideal world
+    developers shouldn't have to flatten objects and hashes in order to make
+    them available to their templates. They should be able to pass the query
+    object (or another object such as a config object) directly into the
+    template:
+
+        $template->param(
+            'query' => $self->query,
+            'cfg'   => $self->cfg,
+            'ENV'   => $ENV,
+        );
+
+    And in the template retrieve parameters directly:
+
+        your username: [% query.param('username') %]
+        administrator: [% cfg.admin %]
+        hostname:      [% ENV.SERVER_NAME %]
+
+    For now, this approach works with Template::Toolkit and Petal, but it
+    does not work with HTML::Template. This situation may change in the
+    future. In the meantime, if you want to pass to an HTML::Template an
+    object that has a "param" method, you can use the "associate" feature:
+
+        $template->config(
+            HTMLTemplate => {
+                associate => $self->query,
+            }
+        );
+
+    Note that "associate" and "associate_query" are not compatible. So if
+    you want to associate the query and an additional object, pass a list to
+    "associate":
+
+        $template->config(
+            HTMLTemplate => {
+                associate => [$self->query, $self->conf]
+            }
         );
 
   load
@@ -327,7 +396,9 @@ METHODS
 
     When you call "load" with no parameters, it uses the default template
     type, the default template configuration, and it determines the name of
-    the template based on the name of the current run mode.
+    the template based on the name of the current run mode. (It determines
+    the current run mode by calling "$self->get_current_runmode". See below
+    under "forward" for how to update this value when changing run modes.)
 
     If you call "load" with one paramter, it is taken to be either the
     filename or a reference to a string containing the template text:
@@ -425,59 +496,275 @@ METHODS
   process
     "process" is an alias for "fill".
 
+APPLICATION METHODS
+    These methods are called directly on your application's $self object.
+
+  load_tmpl
+    This is an emulation of CGI::Application's built-in "load_tmpl" method.
+    For instance:
+
+        $self->load_tmpl('some_template.html');
+
+    It is not exported by default. To enable it, use:
+
+        use CGI::Application::Plugin::AnyTemplate qw/:load_tmpl/;
+
+    You can call it the same way as documented in "CGI::Application" and it
+    will have the same effect. However, it will respect the current template
+    "type", so you can still use it to fill templates of different backends.
+
+    The idea is that you can take an existing CGI::Application-based webapp
+    which uses "HTML::Template" templates, and add the following code to it:
+
+        use CGI::Application::Plugin::AnyTemplate qw/:load_tmpl/;
+
+        sub setup {
+            my $self = shift;
+            $self->template->config(type => TemplateToolkit);
+        }
+
+    This will change all existing calls to load_tmpl within your application
+    to use Template::Toolkit based templates.
+
+    Calling:
+
+        my $template = $self->load_tmpl('some_template.html');
+
+    It is the equivalent of calling:
+
+        my $template = $self->template->load(
+            file => 'some_template.html',
+            auto_add_template_extension => 0,
+        );
+
+    If you add extra options to "load_tmpl", these will be assumed to be
+    HTML::Template specific options, with the exception of the "path"
+    option, which will be extracted and used as 'add_include_path':
+
+        my $template = $self->load_tmpl('some_template.html',
+            cache => 0,
+            path  => '/path/to/templates',
+        );
+
+    This will get translated into:
+
+        my $template = $self->template->load(
+            file => 'some_template.html',
+            auto_add_template_extension => 0,
+            add_include_path => '/path/to/templates',
+            HTMLTemplate => {
+                cache => 0,
+            }
+        );
+
+    Note that if you specify any HTML::Template-specific options here, they
+    will completely overwrite any options that you passed to config.
+
+    Some notes and caveats about using the "load_tmpl" method:
+
+    *   This method only works for the default template configuration (i.e.
+        "$self->template()"). If you set up a named configuration (e.g.
+        "$self->template('myconfig')") there is no way to access it with
+        "load_tmpl". Since plugins should be using named configurations,
+        this means that the "load_tmpl" method should not be used by
+        plugins. See "NOTES FOR AUTHORS OF PLUGINS AND REUSABLE
+        APPLICATIONS", below.
+
+    *   The "load_tmpl" method does not automatically add an extension to
+        the filename you pass to it, even if you have
+        "auto_add_template_extension" set to a true value in your call to
+        "$self->template->config".
+
+  forward
+    The forward method passes control to another run mode and returns its
+    output. This is equivalent to calling "$self->$other_runmode", except
+    that CGI::Application's internal value of the current run mode is
+    updated.
+
+    This means that calling "$self->get_current_runmode" after calling
+    "forward" will return the name of the new run mode. This is useful for
+    controlling how "$self->template->load" determines the template.
+
+    For instance, this is how to pass control to another method without
+    changing the current run mode:
+
+        sub setup {
+            my $self = shift;
+            $self->run_modes(qw/my_runmode/);
+        }
+        sub my_runmode {
+            my $self = shift;
+            return $self->other_method('foo', 'bar', 'baz');
+        }
+        sub other_method {
+            my $self = shift;
+            my @params = @_; # 'foo', 'bar', 'baz'
+
+            my $rm = $self->get_current_runmode;  # 'my_runmode'
+
+            $self->template->fill;  # loads 'my_runmode.html'
+        }
+
+    And this is how to pass control to another run mode while updating the
+    value of "current_run_mode":
+
+        sub setup {
+            my $self = shift;
+            $self->run_modes({
+                my_runmode    => 'my_runmode',
+                other_action  => 'other_method',
+            });
+        }
+        sub my_runmode {
+            my $self = shift;
+            return $self->forward('other_action', 'foo', 'bar', 'baz');
+        }
+        sub other_method {
+            my $self = shift;
+            my @params = @_;  # 'foo', 'bar', 'baz'
+
+            my $rm = $self->get_current_runmode;  # 'other_action'
+
+            $self->template->fill;  # loads 'other_action.html'
+        }
+
+    Note that forward accepts the *name* of the run mode (in this case
+    *'other_action'*), which might not be the same as the name of the method
+    that handles the run mode (in this case *'other_method'*)
+
+  tmpl_path
+    You can set the template "include_paths" by calling
+    "$self->tmpl_path('/path/to/templates')".
+
+    You can also do so by passing a value to the "TMPL_PATH" parameter to
+    your application's "new" method:
+
+        my $webapp = App->new(
+            TMPL_PATH => '/path/to/templates',
+        );
+
+    Paths that you set via "tmpl_path"/"TMPL_PATH" will be put last in the
+    list of include paths, after "add_include_paths" and "include_paths".
+
 DRIVER METHODS
     These are the most commonly used methods of the "AnyTemplate" driver
     object. The driver is what you get back from calling
     "$self->template->load".
 
-    param
-        The "param" method gets and sets values within the template.
+  param
+    The "param" method gets and sets values within the template.
 
-            my $template = $self->template->load;
+        my $template = $self->template->load;
 
-            my @param_names = $template->param();
+        my @param_names = $template->param();
 
-            my $value = $template->param('name');
+        my $value = $template->param('name');
 
-            $template->param('name' => 'value');
-            $template->param(
-                'name1' => 'value1',
-                'name2' => 'value2'
-            );
+        $template->param('name' => 'value');
+        $template->param(
+            'name1' => 'value1',
+            'name2' => 'value2'
+        );
 
-        It is designed to behave similarly to the "param" method in other
-        modules like CGI and HTML::Template.
+    It is designed to behave similarly to the "param" method in other
+    modules like CGI and HTML::Template.
 
-    get_param_hash
-        Returns the template variables as a hash of names and values.
+  get_param_hash
+    Returns the template variables as a hash of names and values.
 
-            my %params     = $self->template->get_param_hash;
+        my %params     = $self->template->get_param_hash;
 
-        In a scalar context, returns a reference to the hash used internally
-        to contain the values:
+    In a scalar context, returns a reference to the hash used internally to
+    contain the values:
 
-            my $params_ref = $self->template->get_param_hash;
+        my $params_ref = $self->template->get_param_hash;
 
-            $params_ref->{'foo'} = 'bar';  # directly change parameter 'foo'
+        $params_ref->{'foo'} = 'bar';  # directly change parameter 'foo'
 
-    output
-        Returns the template with all the values filled in.
+  output
+    Returns the template with all the values filled in.
 
-            return $template->output;
+        return $template->output;
 
-        You can also supply names and values to the template at this stage:
+    You can also supply names and values to the template at this stage:
 
-            return $template->output('name' => 'value', 'name2' => 'value2');
+        return $template->output('name' => 'value', 'name2' => 'value2');
+
+    When you call the "output" method, any components embedded in the
+    template are run. See "EMBEDDED COMPONENTS", below.
 
 PRE- AND POST- PROCESS
-    Before the template output is generated, your application's
-    "$self->template_pre_process" method is called. This method is passed a
-    reference to the $template object.
+    There are several ways to customize the template process. You can modify
+    the template parameters before the template is filled, and you can
+    modify the output of the template after it has been filled.
 
-    It can modify the parameters passed into the template by using the
-    "param" method:
+    Multiple applications and plugins can hook into the template process
+    pipeline, each making changes to the template input and output.
 
-        sub template_pre_process {
+    For instance, it will be possible to make a general-purpose
+    "CGI::Application" plugin that adds arbitrary data to each new template
+    (such as query parameters or configuration data).
+
+    Note that the API has changed for version 0.10 in a
+    non-backwards-compatible way in order to use the new hook system
+    provided by recent versions of "CGI::Application".
+
+  The load_tmpl hook
+    The "load_tmpl" hook is designed to be compatible with the "load_tmpl"
+    hook defined by "CGI::Application" itself.
+
+    The "load_tmpl" hook is called before the template object is created.
+    Any callbacks that you register to this hook will be called before each
+    template is loaded. Register a "load_tmpl" callback with:
+
+       $self->add_callback('load_tmpl',\&my_load_tmpl);
+
+    When the "load_tmpl" callback is executed it will be passed three
+    arguments (*adapted from the* CGI::Application *docs*):
+
+     1. A hash reference of the extra params passed into C<load_tmpl>
+        (ignored by AnyTemplate with the exception of 'path')
+
+     2. Followed by a hash reference to template parameters.
+        You can modify this hash by reference to affect values that are
+        actually passed to the param() method of the template object.
+
+     3. The name of the template file.
+
+    Here's an example stub for a load_tmpl() callback:
+
+        sub my_load_tmpl_callback {
+            my ($self, $ht_params, $tmpl_params, $tmpl_file) = @_;
+            # modify $tmpl_params by reference...
+        }
+
+    Currently, of all the params in $ht_params, all but 'path' are ignored,
+    because these are specific to "HTML::Template". If you want to write a
+    generic callback that needs to be able to access or modify
+    "HTML::Template" parameters then let me know, or add a feature request
+    on <http://rt.cpan.org>.
+
+    The "path" param of $ht_params is initially set to the value of
+    "add_include_path" (if set). Your callback can modify the "path" param,
+    and "add_include_param" will be set to the result.
+
+    Plugin authors who want to provide template processing features are
+    encouraged to use the 'load_tmpl' hook when possible, since it will work
+    both with AnyTemplate and with CGI::Application's built-in "load_tmpl".
+
+  The template_pre_process and template_post_process hooks
+    Before the template output is generated, the "template_pre_process" hook
+    is called. Any callbacks that you register to this hook will be called
+    before each template is processed. Register a "template_pre_process"
+    callback as follows:
+
+        $self->add_callback('template_pre_process', \&my_tmpl_pre_process);
+
+    Pre-process callbacks will be passed a reference to the $template
+    object, and can can modify the parameters passed into the template by
+    using the "param" method:
+
+        sub my_tmpl_pre_process {
             my ($self, $template) = @_;
 
             # Change the internal template parameters by reference
@@ -492,19 +779,22 @@ PRE- AND POST- PROCESS
 
         }
 
-    After the template output is generated, your application's
-    "$self->template_post_process" method is called. This method is passed a
-    reference to the template object and a reference to the output generated
-    by the template. You can modify this output:
+    After the template output is generated, the "template_post_process" hook
+    is called. You can register a "template_post_process" callback as
+    follows:
 
-        sub template_post_process {
+        $self->add_callback('template_post_process', \&my_tmpl_post_process);
+
+    Any callbacks that you register to this hook will be called after each
+    template is processed, and will be passed both a reference to the
+    template object and a reference to the output generated by the template.
+    This allows you to modify the output of the template:
+
+        sub my_tmpl_post_process {
             my ($self, $template, $output_ref) = @_;
 
             $$output_ref =~ s/foo/bar/;
         }
-
-    When you call the "output" method, any components embedded in the
-    template are run. See "EMBEDDED COMPONENTS", below.
 
 EMBEDDED COMPONENTS
   Introduction
@@ -602,6 +892,52 @@ EMBEDDED COMPONENTS
         <span tal:replace="structure CGIAPP/embed 'some_run_mode' param1 'literal string2' ">
             this text gets replaced by the output of some_run_mode
         </span>
+
+NOTES FOR AUTHORS OF PLUGINS AND REUSABLE APPLICATIONS
+    If you are writing a CGI::Application plugin module, or you are writing
+    a "CGI::Application" program that will be distributed to other people
+    (e.g. on CPAN), then it's important to take steps to prevent your
+    application's use of CGI::Application::Plugin::AnyTemplate from
+    conflicting with other plugins or with your end users.
+
+    When a plugin that uses CGI::Application::Plugin::AnyTemplate calls:
+
+       $self->template->config(...)
+
+    It overwrites any existing template configuration with the new settings.
+    So if two plugins do that, they probably clobber each other.
+
+    However, CGI::Application::Plugin::AnyTemplate has the feature of named
+    independent configs:
+
+       $self->template('your_module')->config(...)
+       $self->template('my_plugin')->config(...)
+
+    These configs remain separate from each other. However, you have to keep
+    using these names throughout your module, even when you load and fill
+    the template. For instance:
+
+       sub my_runmode {
+           my $self = shift;
+           my $template = $self->template('my_plugin')->load;
+           $template->output;
+       }
+
+       sub your_runmode {
+           my $self = shift;
+           my %params;
+           $self->template('your_module')->fill(\%params);
+       }
+
+    It's uglier and more verbose, but it also prevents plugins from stepping
+    on each other's toes.
+
+    CGI::Application plugins that use CGI::Application::Plugin::AnyTemplate
+    should default to using their own package name for the AnyTemplate
+    config name:
+
+       $self->template(__PACKAGE__)->config(...);
+       $self->template(__PACKAGE__)->fill(...);
 
 CHANGING THE NAME OF THE 'template' METHOD
     If you want to access the features of this module using a method other

@@ -141,6 +141,8 @@ the C<template_extension> is C<.xhtml>.
 
 =item emulate_associate_query
 
+B<This feature is now deprecated and will be removed in a future release.>
+
 If this config parameter is true, then L<CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit>
 will copy all of the webapp's query params into the template.
 
@@ -151,7 +153,7 @@ C<associate> feature with the webapp's query object:
         associate => $self->query,
     );
 
-By default C<emulate_associate_query> is true.
+By default C<emulate_associate_query> is false.
 
 =item object_caching
 
@@ -193,7 +195,7 @@ sub default_driver_config {
         object_caching          => 1,
         template_extension      => '.tmpl',
         embed_tag_name          => 'CGIAPP',
-        emulate_associate_query => 1,
+        emulate_associate_query => 0,
     );
 }
 

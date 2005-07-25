@@ -2,17 +2,25 @@
 use strict;
 use Test::More 'no_plan';
 
-my $Per_Template_Driver_Tests = 1;
+my $Per_Template_Driver_Tests = 5;
 
 my %Expected_Output;
 
 $Expected_Output{'__Default__'} = <<'EOF';
 --begin--
-fish1----aluevay1
-fish2----aluevay2
-fish3----aluevay3
+var1:porkpiehat1
+var2:porkpiehat2
+var3:porkpiehat3
 --end--
 EOF
+
+my %Extension = (
+    HTMLTemplate     => '.html',
+    HTMLTemplateExpr => '.html',
+    TemplateToolkit  => '.tmpl',
+    Petal            => '.xhtml',
+);
+
 
 $Expected_Output{'Petal'} =
 qq|<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -29,15 +37,17 @@ $Expected_Output{'__Default__'}
     sub setup {
         my $self = shift;
         $self->header_type('none');
-        $self->start_mode('simple');
-        $self->run_modes([qw/simple/]);
+        $self->start_mode('simple_elsewhere');
+        $self->run_modes([qw/simple_elsewhere/]);
         $self->template->config(
             default_type  => $self->param('template_driver'),
-            include_paths => 't/tmpl',
+            add_include_paths => 'really_bad_path',
         );
+        $self->add_callback('load_tmpl', \&my_load_tmpl1);
+        $self->add_callback('load_tmpl', \&my_load_tmpl2);
     }
 
-    sub simple {
+    sub simple_elsewhere {
         my $self = shift;
 
         my $driver = $self->param('template_driver');
@@ -45,11 +55,8 @@ $Expected_Output{'__Default__'}
                            || $Expected_Output{'__Default__'};
 
         my $template = $self->template->load;
-        $template->param(
-            'var1' => 'value1',
-            'var2' => 'value2',
-            'var3' => 'value3',
-        );
+        $template->param('var3' => 'porkpiehat3');
+
         my $output = $template->output;
         $output = $$output if ref $output eq 'SCALAR';
 
@@ -57,21 +64,35 @@ $Expected_Output{'__Default__'}
         '';
     }
 
-    sub template_pre_process {
-        my ($self, $template) = @_;
-        my $params = $template->get_param_hash;
-        foreach my $param (keys %$params) {
-            my $value = $template->param($param);
-            $value =~ s/value/aluevay/g;
+    sub my_load_tmpl1 {
+        my ($self, $ht_params, $tmpl_params, $tmpl_file) = @_;
 
-            $template->param($param, $value);
-        }
+        my $driver = $self->param('template_driver');
+        my $extension = $Extension{$driver};
+
+        is($ht_params->{'path'}, 'really_bad_path', '[my_load_tmpl1] path]');
+
+        $ht_params->{'path'} = 'badpath';
+
+        is($tmpl_file, 'simple_elsewhere' . $extension, '[my_load_tmpl1] filename]');
+
+        $tmpl_params->{'var1'} = 'porkpiehat1';
 
     }
-    sub template_post_process {
-        my ($self, $text) = @_;
-        $$text =~ s/var/fish/g;
-        $$text =~ s/:/----/g;
+    sub my_load_tmpl2 {
+        my ($self, $ht_params, $tmpl_params, $tmpl_file) = @_;
+
+        my $driver = $self->param('template_driver');
+        my $extension = $Extension{$driver};
+
+        is($ht_params->{'path'}, 'badpath', '[my_load_tmpl2] path]');
+
+        $ht_params->{'path'} = 't/tmpl_include';
+
+        is($tmpl_file, 'simple_elsewhere' . $extension, '[my_load_tmpl2] filename]');
+
+        $tmpl_params->{'var2'} = 'porkpiehat2';
+
     }
 }
 

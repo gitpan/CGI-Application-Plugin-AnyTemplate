@@ -2,7 +2,7 @@
 use strict;
 use Test::More 'no_plan';
 
-my $Per_Template_Driver_Tests = 1;
+my $Per_Template_Driver_Tests = 2;
 
 my %AT_Config = (
     default_type                => 'TemplateToolkit',
@@ -37,12 +37,12 @@ my %AT_Config = (
 
 
 SKIP: {
-    if (test_driver_prereqs('HTMLTemplate')) {
+    if (test_driver_prereqs('HTMLTemplate') and test_driver_prereqs('TemplateToolkit')) {
         WebApp->new->run;
         WebApp->new->run;
     }
     else {
-        skip "HTML::Template not installed", $Per_Template_Driver_Tests;
+        skip "HTML::Template or Template::Toolkit not installed", $Per_Template_Driver_Tests;
     }
 }
 
