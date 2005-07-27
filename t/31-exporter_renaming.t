@@ -23,7 +23,9 @@ EOF
 
 {
     package WebApp;
-    use base 'CGI::Application';
+    use CGI::Application;
+    use vars '@ISA';
+    @ISA = ('CGI::Application');
 
     use Exporter::Renaming;
     use Test::More;

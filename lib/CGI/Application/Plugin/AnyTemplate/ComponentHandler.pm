@@ -1,5 +1,6 @@
 
 package CGI::Application::Plugin::AnyTemplate::ComponentHandler;
+use CGI::Application::Plugin::Forward;
 
 =head1 NAME
 
@@ -86,7 +87,7 @@ sub embed {
 
     my $output;
     eval {
-        $output = $webapp->forward($run_mode_name, $containing_template, @_);
+        $output = $webapp->CGI::Application::Plugin::Forward::forward($run_mode_name, $containing_template, @_);
     };
     if ($@) {
         confess("Error embedding run mode [$run_mode_name] in web app [$webapp]: $@\n");
@@ -132,7 +133,7 @@ sub embed_direct {
 
     # I'd like to have some error handling here, but wrapping this in
     # an eval makes return stop working :(
-    return $webapp->forward($run_mode_name, $containing_template, @_);
+    return $webapp->CGI::Application::Plugin::Forward::forward($run_mode_name, $containing_template, @_);
 }
 
 sub dispatch_direct {
@@ -153,6 +154,5 @@ under the same terms as Perl itself.
 =cut
 
 1;
-
 
 

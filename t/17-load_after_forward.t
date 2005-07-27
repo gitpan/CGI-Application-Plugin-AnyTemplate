@@ -1,14 +1,16 @@
 
 use strict;
-use Test::More 'no_plan';
+use Test::More;
 
-my $Per_Template_Driver_Tests = 2;
+use Test::More 'tests' => 12;
+
+my $Per_Template_Driver_Tests = 3;
 
 my %Expected_Output;
 
 $Expected_Output{'__Default__'} = <<'EOF';
 --begin--
-var1:value1
+var1:some_param
 var2:value2
 var3:value3
 --end--
@@ -22,25 +24,39 @@ $Expected_Output{'__Default__'}
 
 {
     package WebApp;
-    use Test::More;
     use CGI::Application;
-    use CGI::Application::Plugin::AnyTemplate;
-
     use vars '@ISA';
     @ISA = ('CGI::Application');
+    use Test::More;
+    use CGI::Application::Plugin::AnyTemplate;
+    use CGI::Application::Plugin::Forward;
 
     sub setup {
         my $self = shift;
         $self->header_type('none');
-        $self->start_mode('simple');
-        $self->run_modes([qw/simple/]);
+        $self->start_mode('start_action');
+        $self->run_modes(
+            'start_action' => 'start_meth',
+            'simple'       => 'simple_meth',
+        );
         $self->template->config(
             default_type  => $self->param('template_driver'),
             include_paths => 't/tmpl',
         );
     }
 
-    sub simple {
+    sub start_meth {
+        my $self   = shift;
+        my $driver = $self->param('template_driver');
+
+        eval {
+            $self->simple_meth('some_param');
+        };
+
+        ok($@, "non-forward jump to new rm fails correctly for driver: $driver");
+        $self->forward('simple', 'some_param');
+    }
+    sub simple_meth {
         my $self = shift;
 
         my $driver = $self->param('template_driver');
@@ -59,23 +75,20 @@ $Expected_Output{'__Default__'}
         $template->clear_params;
 
         $template->param(
-            'var1' => 'value1',
+            'var1' => $_[0],
             'var2' => 'value2',
             'var3' => 'value3',
         );
 
         my $object = $template->object;
 
-        my $ref = $self->param('template_engine_class');
-        is(ref $object, $ref, "template object ref: $ref");
 
         my $output = $template->output;
         $output = $$output if ref $output eq 'SCALAR';
 
-
-
-
         is($output, $expected_output, "Got expected output for driver: $driver");
+        my $ref = $self->param('template_engine_class');
+        is(ref $object, $ref, "template object ref: $ref");
         '';
     }
 }

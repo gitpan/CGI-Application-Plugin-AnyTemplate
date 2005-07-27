@@ -23,9 +23,12 @@ $Expected_Output{'one'}{'__Default__'}
 
 {
     package WebApp;
-    use base 'CGI::Application';
     use Test::More;
+    use CGI::Application;
     use CGI::Application::Plugin::AnyTemplate;
+
+    use vars '@ISA';
+    @ISA = ('CGI::Application');
 
     sub setup {
         my $self = shift;

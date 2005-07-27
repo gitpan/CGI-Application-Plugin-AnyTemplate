@@ -8,7 +8,7 @@ lib/CGI/Application/Plugin/AnyTemplate/Driver/HTMLTemplateExpr.pm
 lib/CGI/Application/Plugin/AnyTemplate/Driver/Petal.pm
 lib/CGI/Application/Plugin/AnyTemplate/Driver/TemplateToolkit.pm
 Makefile.PL
-MANIFEST
+MANIFEST			This list of files
 MANIFEST.SKIP
 META.yml
 misc/dist
@@ -32,8 +32,8 @@ t/12-tt_obj_caching.t
 t/13-tt_obj_caching_include_paths.t
 t/14-template_string.t
 t/15-non-clobbering-config.t
-t/16-forward.t
-t/17-load_default_to_crm.t
+t/16-load_default_to_crm.t
+t/17-load_after_forward.t
 t/18-load_tmpl.t
 t/19-tmpl_path.t
 t/30-driver_errors.t

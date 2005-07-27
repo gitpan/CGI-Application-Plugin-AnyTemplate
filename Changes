@@ -1,5 +1,11 @@
 Revision history for CGI-Application-Plugin-AnyTemplate
 
+0.10_03 July 27, 2005 [**DEVELOPER RELEASE**]
+        - moved 'forward' to its own module: CGI::Application::Plugin::Forward
+        - changed instances of 'use base' to use... and @ISA to be kinder to old Perls
+        - made hook-based tests skip if installed CGI::Application
+          doesn't support hooks
+
 0.10_02 July 25, 2005 [**DEVELOPER RELEASE**]
         - wrapped usage of CGI::Application's callback system in
 

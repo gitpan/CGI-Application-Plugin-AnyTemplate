@@ -22,16 +22,17 @@ $Expected_Output{'__Default__'}
 
 {
     package WebApp;
-    use base 'CGI::Application';
+    use CGI::Application;
+    use vars '@ISA';
+    @ISA = ('CGI::Application');
     use Test::More;
     use CGI::Application::Plugin::AnyTemplate;
 
     sub setup {
         my $self = shift;
         $self->header_type('none');
-        $self->start_mode('start_action');
+        $self->start_mode('simple');
         $self->run_modes(
-            'start_action' => 'start_meth',
             'simple'       => 'simple_meth',
         );
         $self->template->config(
@@ -40,23 +41,21 @@ $Expected_Output{'__Default__'}
         );
     }
 
-    sub start_meth {
-        my $self   = shift;
-        my $driver = $self->param('template_driver');
-
-        eval {
-            $self->simple_meth('some_param');
-        };
-
-        ok($@, "non-forward jump to new rm fails correctly for driver: $driver");
-        $self->forward('simple', 'some_param');
-    }
     sub simple_meth {
+        my $self = shift;
+        $self->other_meth('some_param');
+        '';
+    }
+    sub other_meth {
         my $self = shift;
 
         my $driver = $self->param('template_driver');
         my $expected_output = $Expected_Output{$driver}
                            || $Expected_Output{'__Default__'};
+
+
+        # Even though we are in 'other_meth', the current run mode is still 'simple'
+        is($self->get_current_runmode, 'simple', '[other_meth] current runmode is simple');
 
         my $template = $self->template->load;
         $template->param(
@@ -76,7 +75,6 @@ $Expected_Output{'__Default__'}
         );
 
         my $object = $template->object;
-
 
         my $output = $template->output;
         $output = $$output if ref $output eq 'SCALAR';

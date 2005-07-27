@@ -51,7 +51,10 @@ EOF
 
 {
     package WebApp;
-    use base 'CGI::Application';
+    use CGI::Application;
+    use vars '@ISA';
+    @ISA = ('CGI::Application');
+
     use Test::More;
     use CGI::Application::Plugin::AnyTemplate;
 

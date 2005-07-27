@@ -3,7 +3,7 @@ NAME
     within CGI::Application using a unified interface
 
 VERSION
-    Version 0.10_02
+    Version 0.10_03
 
 SYNOPSIS
     In your CGI::Application-based webapp:
@@ -396,9 +396,34 @@ METHODS
 
     When you call "load" with no parameters, it uses the default template
     type, the default template configuration, and it determines the name of
-    the template based on the name of the current run mode. (It determines
-    the current run mode by calling "$self->get_current_runmode". See below
-    under "forward" for how to update this value when changing run modes.)
+    the template based on the name of the current run mode. It determines
+    the current run mode by calling "$self->get_current_runmode".
+
+    If you want to have the current runmode updated when you pass control to
+    another runmode, use the CGI::Application::Plugin::Forward module:
+
+        use CGI::Application::Plugin::Forward;
+
+        sub first_runmode {
+            my $self = shift;
+            return $self->forward('second_runmode');
+        }
+        sub second_runmode {
+            my $self = shift;
+            my $template = $self->template->load;  # loads 'second_runmode.html'
+        }
+
+    If instead you call "$self->other_method" directly, the value of
+    "$self->get_current_runmode" will not be updated:
+
+        sub first_runmode {
+            my $self = shift;
+            return $self->other_method;
+        }
+        sub other_method {
+            my $self = shift;
+            my $template = $self->template->load;  # loads 'first_runmode.html'
+        }
 
     If you call "load" with one paramter, it is taken to be either the
     filename or a reference to a string containing the template text:
@@ -574,63 +599,6 @@ APPLICATION METHODS
         the filename you pass to it, even if you have
         "auto_add_template_extension" set to a true value in your call to
         "$self->template->config".
-
-  forward
-    The forward method passes control to another run mode and returns its
-    output. This is equivalent to calling "$self->$other_runmode", except
-    that CGI::Application's internal value of the current run mode is
-    updated.
-
-    This means that calling "$self->get_current_runmode" after calling
-    "forward" will return the name of the new run mode. This is useful for
-    controlling how "$self->template->load" determines the template.
-
-    For instance, this is how to pass control to another method without
-    changing the current run mode:
-
-        sub setup {
-            my $self = shift;
-            $self->run_modes(qw/my_runmode/);
-        }
-        sub my_runmode {
-            my $self = shift;
-            return $self->other_method('foo', 'bar', 'baz');
-        }
-        sub other_method {
-            my $self = shift;
-            my @params = @_; # 'foo', 'bar', 'baz'
-
-            my $rm = $self->get_current_runmode;  # 'my_runmode'
-
-            $self->template->fill;  # loads 'my_runmode.html'
-        }
-
-    And this is how to pass control to another run mode while updating the
-    value of "current_run_mode":
-
-        sub setup {
-            my $self = shift;
-            $self->run_modes({
-                my_runmode    => 'my_runmode',
-                other_action  => 'other_method',
-            });
-        }
-        sub my_runmode {
-            my $self = shift;
-            return $self->forward('other_action', 'foo', 'bar', 'baz');
-        }
-        sub other_method {
-            my $self = shift;
-            my @params = @_;  # 'foo', 'bar', 'baz'
-
-            my $rm = $self->get_current_runmode;  # 'other_action'
-
-            $self->template->fill;  # loads 'other_action.html'
-        }
-
-    Note that forward accepts the *name* of the run mode (in this case
-    *'other_action'*), which might not be the same as the name of the method
-    that handles the run mode (in this case *'other_method'*)
 
   tmpl_path
     You can set the template "include_paths" by calling

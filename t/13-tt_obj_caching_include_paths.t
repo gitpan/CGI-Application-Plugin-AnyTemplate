@@ -33,7 +33,9 @@ my %Objects;
 
 {
     package MyProject;
-    use base 'CGI::Application';
+    use CGI::Application;
+    use vars '@ISA';
+    @ISA = ('CGI::Application');
 
     sub setup {
         my $self = shift;
@@ -52,7 +54,9 @@ my %Objects;
 }
 {
     package OtherProject;
-    use base 'CGI::Application';
+    use CGI::Application;
+    use vars '@ISA';
+    @ISA = ('CGI::Application');
 
     sub setup {
         my $self = shift;
@@ -75,7 +79,8 @@ my %Objects;
 
 {
     package WebApp;
-    use base 'MyProject';
+    use vars '@ISA';
+    @ISA = ('MyProject');
     use Test::More;
     use CGI::Application::Plugin::AnyTemplate;
 
@@ -115,7 +120,8 @@ my %Objects;
 
 {
     package OthApp;
-    use base 'OtherProject';
+    use vars '@ISA';
+    @ISA = ('OtherProject');
     use Test::More;
     use CGI::Application::Plugin::AnyTemplate;
 

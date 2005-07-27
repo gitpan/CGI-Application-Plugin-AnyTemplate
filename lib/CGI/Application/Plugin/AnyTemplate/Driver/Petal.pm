@@ -55,7 +55,9 @@ use Carp;
 
 use CGI::Application::Plugin::AnyTemplate::ComponentHandler;
 
-use base 'CGI::Application::Plugin::AnyTemplate::Base';
+use CGI::Application::Plugin::AnyTemplate::Base;
+use vars qw(@ISA);
+@ISA = ('CGI::Application::Plugin::AnyTemplate::Base');
 
 =head1 CONFIGURATION
 

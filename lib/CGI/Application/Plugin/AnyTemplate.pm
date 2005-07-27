@@ -7,11 +7,11 @@ CGI::Application::Plugin::AnyTemplate - Use any templating system from within CG
 
 =head1 VERSION
 
-Version 0.10_02
+Version 0.10_03
 
 =cut
 
-our $VERSION = '0.10_02';
+our $VERSION = '0.10_03';
 
 =head1 SYNOPSIS
 
@@ -153,19 +153,21 @@ See also below under L<"CHANGING THE NAME OF THE 'template' METHOD">.
 =cut
 
 use strict;
-use base 'Exporter';
 use CGI::Application;
 use Carp;
+use Clone;
 use Scalar::Util qw(weaken);
 
-use Clone;
+use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS $CAPAT_Namespace);
 
-our @ISA         = 'Exporter';
-our @EXPORT      = qw(template forward);
-our @EXPORT_OK   = qw(load_tmpl);
-our %EXPORT_TAGS = (load_tmpl => ['load_tmpl', @EXPORT]);
+@ISA = ('Exporter');
 
-our $CAPAT_Namespace = '__ANY_TEMPLATE';
+@ISA         = 'Exporter';
+@EXPORT      = qw(template);
+@EXPORT_OK   = qw(load_tmpl);
+%EXPORT_TAGS = (load_tmpl => ['load_tmpl', @EXPORT]);
+
+$CAPAT_Namespace = '__ANY_TEMPLATE';
 
 if (CGI::Application->can('new_hook')) {
     CGI::Application->new_hook('template_pre_process');
@@ -521,10 +523,34 @@ This can be as simple (and magical) as:
 
 When you call C<load> with no parameters, it uses the default template
 type, the default template configuration, and it determines the name of
-the template based on the name of the current run mode.  (It determines
-the current run mode by calling C<< $self->get_current_runmode >>.  See
-below under C<forward> for how to update this value when changing run
-modes.)
+the template based on the name of the current run mode.  It determines
+the current run mode by calling C<< $self->get_current_runmode >>.
+
+If you want to have the current runmode updated when you pass control to
+another runmode, use the L<CGI::Application::Plugin::Forward> module:
+
+    use CGI::Application::Plugin::Forward;
+
+    sub first_runmode {
+        my $self = shift;
+        return $self->forward('second_runmode');
+    }
+    sub second_runmode {
+        my $self = shift;
+        my $template = $self->template->load;  # loads 'second_runmode.html'
+    }
+
+If instead you call C<< $self->other_method >> directly, the value
+of C<< $self->get_current_runmode >> will not be updated:
+
+    sub first_runmode {
+        my $self = shift;
+        return $self->other_method;
+    }
+    sub other_method {
+        my $self = shift;
+        my $template = $self->template->load;  # loads 'first_runmode.html'
+    }
 
 If you call C<load> with one paramter, it is taken to be either the
 filename or a reference to a string containing the template text:
@@ -1084,79 +1110,6 @@ sub load_tmpl {
     }
 
     return $self->template->load(%params);
-}
-
-=head2 forward
-
-The forward method passes control to another run mode and returns its
-output.  This is equivalent to calling C<< $self->$other_runmode >>,
-except that L<CGI::Application>'s internal value of the current run mode
-is updated.
-
-This means that calling C<< $self->get_current_runmode >> after calling
-C<forward> will return the name of the new run mode.  This is useful for
-controlling how C<< $self->template->load >> determines the template.
-
-For instance, this is how to pass control to another method without changing the current run mode:
-
-    sub setup {
-        my $self = shift;
-        $self->run_modes(qw/my_runmode/);
-    }
-    sub my_runmode {
-        my $self = shift;
-        return $self->other_method('foo', 'bar', 'baz');
-    }
-    sub other_method {
-        my $self = shift;
-        my @params = @_; # 'foo', 'bar', 'baz'
-
-        my $rm = $self->get_current_runmode;  # 'my_runmode'
-
-        $self->template->fill;  # loads 'my_runmode.html'
-    }
-
-And this is how to pass control to another run mode while updating the value
-of C<current_run_mode>:
-
-    sub setup {
-        my $self = shift;
-        $self->run_modes({
-            my_runmode    => 'my_runmode',
-            other_action  => 'other_method',
-        });
-    }
-    sub my_runmode {
-        my $self = shift;
-        return $self->forward('other_action', 'foo', 'bar', 'baz');
-    }
-    sub other_method {
-        my $self = shift;
-        my @params = @_;  # 'foo', 'bar', 'baz'
-
-        my $rm = $self->get_current_runmode;  # 'other_action'
-
-        $self->template->fill;  # loads 'other_action.html'
-    }
-
-Note that forward accepts the I<name> of the run mode (in this case
-I<'other_action'>), which might not be the same as the name of the
-method that handles the run mode (in this case I<'other_method'>)
-
-
-=cut
-
-sub forward {
-    my $self     = shift;
-    my $run_mode = shift;
-
-    my %rm_map = $self->run_modes;
-    if (not exists $rm_map{$run_mode}) {
-        croak "run mode $run_mode does not exist";
-    }
-    my $method = $rm_map{$run_mode};
-    $self->{__CURRENT_RUNMODE} = $run_mode;
-    return $self->$method(@_);
 }
 
 =head2 tmpl_path

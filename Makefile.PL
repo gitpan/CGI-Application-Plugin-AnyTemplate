@@ -10,6 +10,7 @@ WriteMakefile
                            'Test::More' => 0,
                            'Scalar::Util' => 0,
                            'CGI::Application' => 0,
+                           'CGI::Application::Plugin::Forward' => 0,
                            'Clone' => 0
                          }
         )

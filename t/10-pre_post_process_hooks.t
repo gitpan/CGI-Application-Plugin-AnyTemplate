@@ -1,6 +1,16 @@
 
 use strict;
-use Test::More 'no_plan';
+use Test::More;
+
+use CGI::Application;
+
+if (CGI::Application->can('new_hook')) {
+    plan 'no_plan';
+}
+else {
+    plan skip_all => 'installed version of CGI::Application does not support hooks';
+}
+
 
 my $Per_Template_Driver_Tests = 1;
 
@@ -22,9 +32,12 @@ $Expected_Output{'__Default__'}
 
 {
     package WebApp;
-    use base 'CGI::Application';
     use Test::More;
+    use CGI::Application;
     use CGI::Application::Plugin::AnyTemplate;
+
+    use vars '@ISA';
+    @ISA = ('CGI::Application');
 
     sub setup {
         my $self = shift;

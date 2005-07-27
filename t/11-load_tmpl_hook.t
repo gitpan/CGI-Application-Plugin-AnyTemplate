@@ -1,6 +1,16 @@
 
 use strict;
-use Test::More 'no_plan';
+use Test::More;
+
+use CGI::Application;
+
+# The load_tmpl hook changed in CGI::Application between versions 4.0 and 4.01
+if (CGI::Application->can('new_hook') and $CGI::Application::VERSION > 4.0) {
+    plan 'no_plan';
+}
+else {
+    plan skip_all => 'installed version of CGI::Application does not support the latest load_tmpl hook';
+}
 
 my $Per_Template_Driver_Tests = 5;
 
@@ -30,9 +40,12 @@ $Expected_Output{'__Default__'}
 
 {
     package WebApp;
-    use base 'CGI::Application';
     use Test::More;
+    use CGI::Application;
     use CGI::Application::Plugin::AnyTemplate;
+
+    use vars '@ISA';
+    @ISA = ('CGI::Application');
 
     sub setup {
         my $self = shift;
