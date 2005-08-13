@@ -1,5 +1,10 @@
 Revision history for CGI-Application-Plugin-AnyTemplate
 
+0.10_04 Aug 13, 2005 [**DEVELOPER RELEASE**]
+        - new driver HTMLTemplatePluggable has support for
+          HTML::Template::Pluggable and HTML::Template::Plugin::Dot
+          (thanks to Mark Stosberg for starting the driver)
+
 0.10_03 July 27, 2005 [**DEVELOPER RELEASE**]
         - moved 'forward' to its own module: CGI::Application::Plugin::Forward
         - changed instances of 'use base' to use... and @ISA to be kinder to old Perls

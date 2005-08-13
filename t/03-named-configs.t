@@ -35,10 +35,11 @@ $Expected_Output{'two'}{'__Default__'}
 </html>|;
 
 my %Template = (
-    HTMLTemplateExpr => 'simple.html',
-    HTMLTemplate     => 'simple.html',
-    Petal            => 'simple.xhtml',
-    TemplateToolkit  => 'simple.tmpl',
+    HTMLTemplateExpr      => 'simple.html',
+    HTMLTemplate          => 'simple.html',
+    HTMLTemplatePluggable => 'simple.html',
+    Petal                 => 'simple.xhtml',
+    TemplateToolkit       => 'simple.tmpl',
 );
 
 
@@ -70,6 +71,9 @@ my %Template = (
                 template_extension => '.bork',
             },
             HTMLTemplate => {
+                template_extension => '.bork',
+            },
+            HTMLTemplatePluggable => {
                 template_extension => '.bork',
             },
             HTMLTemplateExpr => {
@@ -117,6 +121,9 @@ my %Template = (
                 template_extension => '.ext_HTMLTemplate',
             },
             HTMLTemplateExpr => {
+            },
+            HTMLTemplatePluggable => {
+                template_extension => '.ext_HTMLTemplate',
             },
             Petal => {
                 template_extension => '.ext_Petal',
@@ -170,6 +177,19 @@ SKIP: {
     }
     else {
         skip "Petal not installed", $Per_Template_Driver_Tests;
+    }
+}
+SKIP: {
+    if (test_driver_prereqs('HTMLTemplatePluggable')) {
+        require HTML::Template::Plugin::Dot;
+        import HTML::Template::Plugin::Dot;
+        WebApp->new(PARAMS => {
+            template_driver       => 'HTMLTemplatePluggable',
+            template_engine_class => 'HTML::Template::Pluggable',
+        })->run;
+    }
+    else {
+        skip "HTML::Template::Pluggable not installed", $Per_Template_Driver_Tests;
     }
 }
 

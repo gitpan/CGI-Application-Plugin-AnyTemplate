@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name: CGI-Application-Plugin-AnyTemplate
-version: 0.10_03
+version: 0.10_04
 author:
   - Michael Graham <mag-perl@occamstoothbrush.com>
 abstract: ! >-
@@ -16,7 +16,7 @@ requires:
 provides:
   CGI::Application::Plugin::AnyTemplate:
     file: lib/CGI/Application/Plugin/AnyTemplate.pm
-    version: 0.10_03
+    version: 0.10_04
   CGI::Application::Plugin::AnyTemplate::Base:
     file: lib/CGI/Application/Plugin/AnyTemplate/Base.pm
   ? |-
@@ -34,6 +34,11 @@ provides:
 :
     file: |-
       lib/CGI/Application/Plugin/AnyTemplate/Driver/HTMLTemplateExpr.pm
+  ? |-
+    CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplatePluggable
+:
+    file: |-
+      lib/CGI/Application/Plugin/AnyTemplate/Driver/HTMLTemplatePluggable.pm
   ? |-
     CGI::Application::Plugin::AnyTemplate::Driver::Petal
 :

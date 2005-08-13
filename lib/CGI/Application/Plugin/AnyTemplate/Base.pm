@@ -391,6 +391,7 @@ sub _require_prerequisite_modules {
         if ($@) {
             push @missing_modules, $module;
         }
+        # $module->import;
     }
     if (@missing_modules) {
         foreach my $module (@missing_modules) {
@@ -418,6 +419,7 @@ be notified of progress on your bug as I make changes.
     CGI::Application::Plugin::AnyTemplate::ComponentHandler
     CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate
     CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr
+    CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplatePluggable
     CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit
     CGI::Application::Plugin::AnyTemplate::Driver::Petal
 
@@ -425,6 +427,10 @@ be notified of progress on your bug as I make changes.
 
     Template::Toolkit
     HTML::Template
+
+    HTML::Template::Pluggable
+    HTML::Template::Plugin::Dot
+
     Petal
 
     CGI::Application::Plugin::TT

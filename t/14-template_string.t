@@ -21,7 +21,7 @@ qq|<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 $Expected_Output{'__Default__'}
 </html>|;
 
-$Template_String{'HTMLTemplate'} = $Template_String{'HTMLTemplateExpr'} = <<EOF;
+$Template_String{'HTMLTemplatePluggable'} = $Template_String{'HTMLTemplate'} = $Template_String{'HTMLTemplateExpr'} = <<EOF;
 --begin--
 string_var1:<!-- TMPL_VAR NAME=var1 -->
 string_var2:<!-- TMPL_VAR NAME=var2 -->
@@ -161,6 +161,19 @@ SKIP: {
     }
     else {
         skip "Petal not installed", $Per_Template_Driver_Tests;
+    }
+}
+SKIP: {
+    if (test_driver_prereqs('HTMLTemplatePluggable')) {
+        require HTML::Template::Plugin::Dot;
+        import HTML::Template::Plugin::Dot;
+        WebApp->new(PARAMS => {
+            template_driver       => 'HTMLTemplatePluggable',
+            template_engine_class => 'HTML::Template::Pluggable',
+        })->run;
+    }
+    else {
+        skip "HTML::Template::Pluggable not installed", $Per_Template_Driver_Tests;
     }
 }
 

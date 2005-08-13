@@ -22,10 +22,11 @@ $Expected_Output{'__Default__'}
 
 
 my %Template = (
-    HTMLTemplateExpr => 'simple.html',
-    HTMLTemplate     => 'simple.html',
-    Petal            => 'simple.xhtml',
-    TemplateToolkit  => 'simple.tmpl',
+    HTMLTemplateExpr      => 'simple.html',
+    HTMLTemplate          => 'simple.html',
+    HTMLTemplatePluggable => 'simple.html',
+    Petal                 => 'simple.xhtml',
+    TemplateToolkit       => 'simple.tmpl',
 );
 
 
@@ -103,6 +104,19 @@ SKIP: {
     }
     else {
         skip "Petal not installed", $Per_Template_Driver_Tests;
+    }
+}
+SKIP: {
+    if (test_driver_prereqs('HTMLTemplatePluggable')) {
+        require HTML::Template::Plugin::Dot;
+        import HTML::Template::Plugin::Dot;
+        WebApp->new(PARAMS => {
+            template_driver       => 'HTMLTemplatePluggable',
+            template_engine_class => 'HTML::Template::Pluggable',
+        })->run;
+    }
+    else {
+        skip "HTML::Template::Pluggable not installed", $Per_Template_Driver_Tests;
     }
 }
 

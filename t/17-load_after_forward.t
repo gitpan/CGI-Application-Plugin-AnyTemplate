@@ -2,7 +2,7 @@
 use strict;
 use Test::More;
 
-use Test::More 'tests' => 12;
+use Test::More 'tests' => 15;
 
 my $Per_Template_Driver_Tests = 3;
 
@@ -136,6 +136,19 @@ SKIP: {
     }
     else {
         skip "Petal not installed", $Per_Template_Driver_Tests;
+    }
+}
+SKIP: {
+    if (test_driver_prereqs('HTMLTemplatePluggable')) {
+        require HTML::Template::Plugin::Dot;
+        import HTML::Template::Plugin::Dot;
+        WebApp->new(PARAMS => {
+            template_driver       => 'HTMLTemplatePluggable',
+            template_engine_class => 'HTML::Template::Pluggable',
+        })->run;
+    }
+    else {
+        skip "HTML::Template::Pluggable not installed", $Per_Template_Driver_Tests;
     }
 }
 

@@ -15,6 +15,10 @@ two:none
 three:none
 four:none
 outer_var1:outer_value1
+zzz:p1a
+zzz:p2a
+zzz:p1b
+zzz:p2b
 --begin inner2--
 one:p1a
 two:literal1a
@@ -86,6 +90,10 @@ $Expected_Output{'Petal'}
             HTMLTemplateExpr => {
                 die_on_bad_params  => 0,
                 template_extension => '.html_expr',
+            },
+            HTMLTemplatePluggable => {
+                die_on_bad_params  => 0,
+                template_extension => '.html_pluggable',
             },
         );
     }
@@ -208,6 +216,19 @@ SKIP: {
     }
     else {
         skip "Petal not installed", $Per_Template_Driver_Tests;
+    }
+}
+SKIP: {
+    if (test_driver_prereqs('HTMLTemplatePluggable')) {
+        require HTML::Template::Plugin::Dot;
+        import HTML::Template::Plugin::Dot;
+        WebApp->new(PARAMS => {
+            template_driver       => 'HTMLTemplatePluggable',
+            template_engine_class => 'HTML::Template::Pluggable',
+        })->run;
+    }
+    else {
+        skip "HTML::Template::Pluggable not installed", $Per_Template_Driver_Tests;
     }
 }
 

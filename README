@@ -3,7 +3,7 @@ NAME
     within CGI::Application using a unified interface
 
 VERSION
-    Version 0.10_03
+    Version 0.10_04
 
 SYNOPSIS
     In your CGI::Application-based webapp:
@@ -39,7 +39,8 @@ DESCRIPTION
     Perl templating system using a single consistent interface.
 
     Currently supported templating systems include HTML::Template,
-    HTML::Template::Expr, Template::Toolkit and Petal.
+    HTML::Template::Expr, HTML::Template::Pluggable, Template::Toolkit and
+    Petal.
 
     You can access any of these templating systems using the same interface.
     In this way, you can use the same code and switch templating systems on
@@ -279,6 +280,12 @@ METHODS
                 die_on_bad_params  => 0,
                 template_extension => '.html',
             },
+            HTMLTemplatePluggable => {
+                cache              => 1,
+                global_vars        => 1,
+                die_on_bad_params  => 0,
+                template_extension => '.html',
+            },
             TemplateToolkit => {
                 POST_CHOMP         => 1,
                 template_extension => '.tmpl',
@@ -306,6 +313,7 @@ METHODS
 
     CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate
     CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr
+    CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplatePluggable
     CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit
     CGI::Application::Plugin::AnyTemplate::Driver::Petal
 
@@ -315,9 +323,9 @@ METHODS
     When you enable this feature all data in "$self->query" are copied into
     the template object before the template is processed.
 
-    For the "HTMLTemplate" and "HTMLTemplateExpr" drivers this is done with
-    the "associate" feature of HTML::Template and HTML::Template::Expr,
-    respectively:
+    For the "HTMLTemplate", "HTMLTemplateExpr" and "HTMLTemplatePluggable"
+    drivers this is done with the "associate" feature of HTML::Template and
+    HTML::Template::Expr, respectively:
 
         my $template = HTML::Template->new(
             associate => $self->query,
@@ -328,22 +336,11 @@ METHODS
 
     To enable this feature, pass a true value to "associate_query" or
     "emulate_associate_query" (depending on the template system):
-
-        $self->template->config(
-            default_type => 'HTMLTemplate',
-            HTMLTemplate => {
-                associate_query => 1,
-            },
-            HTMLTemplateExpr => {
-                associate_query => 1,
-            },
-            TemplateToolkit => {
-                emulate_associate_query => 1,
-            },
-            Petal => {
-                emulate_associate_query => 1,
-            },
-        );
+    $self->template->config( default_type => 'HTMLTemplate', HTMLTemplate =>
+    { associate_query => 1, }, HTMLTemplateExpr => { associate_query => 1,
+    }, HTMLTemplatePluggable => { associate_query => 1, }, TemplateToolkit
+    => { emulate_associate_query => 1, }, Petal => { emulate_associate_query
+    => 1, }, );
 
     The reason this feature is now disabled by default is that it poses a
     potential XSS (Cross Site Scripting) security risk.
@@ -366,16 +363,8 @@ METHODS
         administrator: [% cfg.admin %]
         hostname:      [% ENV.SERVER_NAME %]
 
-    For now, this approach works with Template::Toolkit and Petal, but it
-    does not work with HTML::Template. This situation may change in the
-    future. In the meantime, if you want to pass to an HTML::Template an
-    object that has a "param" method, you can use the "associate" feature:
-
-        $template->config(
-            HTMLTemplate => {
-                associate => $self->query,
-            }
-        );
+    This approach works with Template::Toolkit, Petal, and
+    HTML::Template::Pluggable (via the HTML::Template::Plugin::Dot plugin).
 
     Note that "associate" and "associate_query" are not compatible. So if
     you want to associate the query and an additional object, pass a list to
@@ -793,6 +782,10 @@ EMBEDDED COMPONENTS
 
         <TMPL_VAR EXPR="CGIAPP_embed('some_run_mode')">
 
+    HTML::Template::Pluggable syntax:
+
+        <TMPL_VAR EXPR="cgiapp.embed('some_run_mode')">
+
     Template::Toolkit syntax:
 
         [% CGIAPP.embed("some_run_mode") %]
@@ -850,6 +843,10 @@ EMBEDDED COMPONENTS
     HTML::Template::Expr syntax:
 
         <TMPL_VAR EXPR="CGIAPP_embed('some_run_mode', param1, 'literal string2')">
+
+    HTML::Template::Pluggable syntax:
+
+        <TMPL_VAR EXPR="cgiapp.embed('some_run_mode', param1, 'literal string2')">
 
     Template::Toolkit syntax:
 
@@ -984,6 +981,7 @@ SEE ALSO
         CGI::Application::Plugin::AnyTemplate::ComponentHandler
         CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate
         CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr
+        CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplatePluggable
         CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit
         CGI::Application::Plugin::AnyTemplate::Driver::Petal
 
@@ -991,6 +989,10 @@ SEE ALSO
 
         Template::Toolkit
         HTML::Template
+
+        HTML::Template::Pluggable
+        HTML::Template::Plugin::Dot
+
         Petal
 
         Exporter::Renaming

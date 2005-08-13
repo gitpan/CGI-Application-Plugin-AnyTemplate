@@ -14,13 +14,14 @@
 my $StyleSheet = "misc/style.css";
 
 my %HTML = (
-    'CAP-AnyTemplate.html'                         => 'lib/CGI/Application/Plugin/AnyTemplate.pm',
-    'CAP-AnyTemplate-ComponentHandler.html'        => 'lib/CGI/Application/Plugin/AnyTemplate/ComponentHandler.pm',
-    'CAP-AnyTemplate-Base.html'                    => 'lib/CGI/Application/Plugin/AnyTemplate/Base.pm',
-    'CAP-AnyTemplate-Driver-HTMLTemplate.html'     => 'lib/CGI/Application/Plugin/AnyTemplate/Driver/HTMLTemplate.pm',
-    'CAP-AnyTemplate-Driver-HTMLTemplateExpr.html' => 'lib/CGI/Application/Plugin/AnyTemplate/Driver/HTMLTemplateExpr.pm',
-    'CAP-AnyTemplate-Driver-TemplateToolkit.html'  => 'lib/CGI/Application/Plugin/AnyTemplate/Driver/TemplateToolkit.pm',
-    'CAP-AnyTemplate-Driver-Petal.html'            => 'lib/CGI/Application/Plugin/AnyTemplate/Driver/Petal.pm',
+    'CAP-AnyTemplate.html'                              => 'lib/CGI/Application/Plugin/AnyTemplate.pm',
+    'CAP-AnyTemplate-ComponentHandler.html'             => 'lib/CGI/Application/Plugin/AnyTemplate/ComponentHandler.pm',
+    'CAP-AnyTemplate-Base.html'                         => 'lib/CGI/Application/Plugin/AnyTemplate/Base.pm',
+    'CAP-AnyTemplate-Driver-HTMLTemplate.html'          => 'lib/CGI/Application/Plugin/AnyTemplate/Driver/HTMLTemplate.pm',
+    'CAP-AnyTemplate-Driver-HTMLTemplateExpr.html'      => 'lib/CGI/Application/Plugin/AnyTemplate/Driver/HTMLTemplateExpr.pm',
+    'CAP-AnyTemplate-Driver-HTMLTemplatePluggable.html' => 'lib/CGI/Application/Plugin/AnyTemplate/Driver/HTMLTemplatePluggable.pm',
+    'CAP-AnyTemplate-Driver-TemplateToolkit.html'       => 'lib/CGI/Application/Plugin/AnyTemplate/Driver/TemplateToolkit.pm',
+    'CAP-AnyTemplate-Driver-Petal.html'                 => 'lib/CGI/Application/Plugin/AnyTemplate/Driver/Petal.pm',
 );
 
 my %TEXT = (

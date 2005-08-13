@@ -7,11 +7,11 @@ CGI::Application::Plugin::AnyTemplate - Use any templating system from within CG
 
 =head1 VERSION
 
-Version 0.10_03
+Version 0.10_04
 
 =cut
 
-our $VERSION = '0.10_03';
+our $VERSION = '0.10_04';
 
 =head1 SYNOPSIS
 
@@ -51,7 +51,8 @@ C<CGI::Application::Plugin::AnyTemplate> allows you to use any
 supported Perl templating system using a single consistent interface.
 
 Currently supported templating systems include L<HTML::Template>,
-L<HTML::Template::Expr>, L<Template::Toolkit|Template> and L<Petal>.
+L<HTML::Template::Expr>, L<HTML::Template::Pluggable>,
+L<Template::Toolkit|Template> and L<Petal>.
 
 You can access any of these templating systems using the same interface.
 In this way, you can use the same code and switch templating systems on
@@ -356,6 +357,12 @@ C<config>, by including subsections for each driver type:
             die_on_bad_params  => 0,
             template_extension => '.html',
         },
+        HTMLTemplatePluggable => {
+            cache              => 1,
+            global_vars        => 1,
+            die_on_bad_params  => 0,
+            template_extension => '.html',
+        },
         TemplateToolkit => {
             POST_CHOMP         => 1,
             template_extension => '.tmpl',
@@ -388,6 +395,8 @@ drivers:
 
 =item L<CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr>
 
+=item L<CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplatePluggable>
+
 =item L<CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit>
 
 =item L<CGI::Application::Plugin::AnyTemplate::Driver::Petal>
@@ -401,9 +410,9 @@ B<This feature is now deprecated and will be removed in a future release.>
 When you enable this feature all data in C<< $self->query >> are copied
 into the template object before the template is processed.
 
-For the C<HTMLTemplate> and C<HTMLTemplateExpr> drivers this is done
-with the C<associate> feature of L<HTML::Template> and
-L<HTML::Template::Expr>, respectively:
+For the C<HTMLTemplate>, C<HTMLTemplateExpr> and
+C<HTMLTemplatePluggable> drivers this is done with the C<associate>
+feature of L<HTML::Template> and L<HTML::Template::Expr>, respectively:
 
     my $template = HTML::Template->new(
         associate => $self->query,
@@ -414,13 +423,15 @@ params into the template params before the template is processed.
 
 To enable this feature, pass a true value to C<associate_query> or
 C<emulate_associate_query> (depending on the template system):
-
     $self->template->config(
         default_type => 'HTMLTemplate',
         HTMLTemplate => {
             associate_query => 1,
         },
         HTMLTemplateExpr => {
+            associate_query => 1,
+        },
+        HTMLTemplatePluggable => {
             associate_query => 1,
         },
         TemplateToolkit => {
@@ -452,17 +463,8 @@ And in the template retrieve parameters directly:
     administrator: [% cfg.admin %]
     hostname:      [% ENV.SERVER_NAME %]
 
-For now, this approach works with L<Template::Toolkit|Template> and
-L<Petal>, but it does not work with L<HTML::Template>.  This situation
-may change in the future.  In the meantime, if you want to pass to an
-L<HTML::Template> an object that has a C<param> method, you can use the
-C<associate> feature:
-
-    $template->config(
-        HTMLTemplate => {
-            associate => $self->query,
-        }
-    );
+This approach works with L<Template::Toolkit|Template>, L<Petal>, and
+L<HTML::Template::Pluggable> (via the L<HTML::Template::Plugin::Dot> plugin).
 
 Note that C<associate> and C<associate_query> are not compatible.  So if
 you want to associate the query and an additional object, pass a list to
@@ -1320,6 +1322,10 @@ L<HTML::Template::Expr> syntax:
 
     <TMPL_VAR EXPR="CGIAPP_embed('some_run_mode')">
 
+L<HTML::Template::Pluggable> syntax:
+
+    <TMPL_VAR EXPR="cgiapp.embed('some_run_mode')">
+
 L<Template::Toolkit|Template> syntax:
 
     [% CGIAPP.embed("some_run_mode") %]
@@ -1378,6 +1384,10 @@ I<for limitations to the emulation>.
 L<HTML::Template::Expr> syntax:
 
     <TMPL_VAR EXPR="CGIAPP_embed('some_run_mode', param1, 'literal string2')">
+
+L<HTML::Template::Pluggable> syntax:
+
+    <TMPL_VAR EXPR="cgiapp.embed('some_run_mode', param1, 'literal string2')">
 
 L<Template::Toolkit|Template> syntax:
 
@@ -1522,6 +1532,7 @@ be notified of progress on your bug as I make changes.
     CGI::Application::Plugin::AnyTemplate::ComponentHandler
     CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate
     CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr
+    CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplatePluggable
     CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit
     CGI::Application::Plugin::AnyTemplate::Driver::Petal
 
@@ -1529,6 +1540,10 @@ be notified of progress on your bug as I make changes.
 
     Template::Toolkit
     HTML::Template
+
+    HTML::Template::Pluggable
+    HTML::Template::Plugin::Dot
+
     Petal
 
     Exporter::Renaming

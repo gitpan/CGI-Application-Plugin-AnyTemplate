@@ -212,6 +212,7 @@ sub render_template {
     CGI::Application::Plugin::AnyTemplate::Base
     CGI::Application::Plugin::AnyTemplate::ComponentHandler
     CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate
+    CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplatePluggable
     CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit
     CGI::Application::Plugin::AnyTemplate::Driver::Petal
 
@@ -219,6 +220,10 @@ sub render_template {
 
     Template::Toolkit
     HTML::Template
+
+    HTML::Template::Pluggable
+    HTML::Template::Plugin::Dot
+
     Petal
 
     Exporter::Renaming

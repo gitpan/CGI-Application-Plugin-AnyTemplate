@@ -58,6 +58,9 @@ $Expected_Output{'non_associate'}{'__Default__'}
             HTMLTemplateExpr => {
                 associate_query => 1,
             },
+            HTMLTemplatePluggable => {
+                associate_query => 1,
+            },
             TemplateToolkit => {
                 emulate_associate_query => 1,
             },
@@ -144,6 +147,19 @@ SKIP: {
     }
     else {
         skip "Petal not installed", $Per_Template_Driver_Tests;
+    }
+}
+SKIP: {
+    if (test_driver_prereqs('HTMLTemplatePluggable')) {
+        require HTML::Template::Plugin::Dot;
+        import HTML::Template::Plugin::Dot;
+        WebApp->new(PARAMS => {
+            template_driver       => 'HTMLTemplatePluggable',
+            template_engine_class => 'HTML::Template::Pluggable',
+        })->run;
+    }
+    else {
+        skip "HTML::Template::Pluggable not installed", $Per_Template_Driver_Tests;
     }
 }
 

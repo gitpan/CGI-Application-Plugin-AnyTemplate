@@ -5,6 +5,7 @@ lib/CGI/Application/Plugin/AnyTemplate/Base.pm
 lib/CGI/Application/Plugin/AnyTemplate/ComponentHandler.pm
 lib/CGI/Application/Plugin/AnyTemplate/Driver/HTMLTemplate.pm
 lib/CGI/Application/Plugin/AnyTemplate/Driver/HTMLTemplateExpr.pm
+lib/CGI/Application/Plugin/AnyTemplate/Driver/HTMLTemplatePluggable.pm
 lib/CGI/Application/Plugin/AnyTemplate/Driver/Petal.pm
 lib/CGI/Application/Plugin/AnyTemplate/Driver/TemplateToolkit.pm
 Makefile.PL
@@ -45,12 +46,14 @@ t/tlib/CGI/Application/Plugin/AnyTemplate/Driver/MyCAPATDriver2.pm
 t/tmpl/cache_incl_paths_outer.tmpl
 t/tmpl/dispatch_outer.html
 t/tmpl/dispatch_outer.html_expr
+t/tmpl/dispatch_outer.html_pluggable
 t/tmpl/dispatch_outer.tmpl
 t/tmpl/dispatch_outer.xhtml
 t/tmpl/embed_error1.html
 t/tmpl/embed_error2.html
 t/tmpl/embed_outer.html
 t/tmpl/embed_outer.html_expr
+t/tmpl/embed_outer.html_pluggable
 t/tmpl/embed_outer.tmpl
 t/tmpl/embed_outer.xhtml
 t/tmpl/simple.html
@@ -63,10 +66,12 @@ t/tmpl/test_template
 t/tmpl_include/cache_incl_paths_inner.tmpl
 t/tmpl_include/embed_inner1.html
 t/tmpl_include/embed_inner1.html_expr
+t/tmpl_include/embed_inner1.html_pluggable
 t/tmpl_include/embed_inner1.tmpl
 t/tmpl_include/embed_inner1.xhtml
 t/tmpl_include/embed_inner2.html
 t/tmpl_include/embed_inner2.html_expr
+t/tmpl_include/embed_inner2.html_pluggable
 t/tmpl_include/embed_inner2.tmpl
 t/tmpl_include/embed_inner2.xhtml
 t/tmpl_include/simple_elsewhere.html

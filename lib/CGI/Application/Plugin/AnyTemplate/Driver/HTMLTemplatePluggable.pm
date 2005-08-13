@@ -1,65 +1,47 @@
-
-package CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate;
+package CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplatePluggable;
 
 =head1 NAME
 
-CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate - HTML::Template driver to AnyTemplate
+CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplatePluggable - HTML::Template::Pluggable driver to AnyTemplate
+
+=head1 SYNOPSIS
+
+  # Load Pluggable and your plugins before using this driver.
+  use HTML::Template::Pluggable;
+  use HTML::Template::Plugin::Dot;
 
 =head1 DESCRIPTION
 
 This is a driver for L<CGI::Application::Plugin::AnyTemplate>, which
 provides the implementation details specific to rendering templates via
-the L<HTML::Template> templating system.
+the L<HTML::Template::Pluggable> templating system.
 
 All C<AnyTemplate> drivers are designed to be used the same way.  For
 general usage instructions, see the documentation of
 L<CGI::Application::Plugin::AnyTemplate>.
 
-=head1 EMBEDDED COMPONENT SYNTAX (HTML::Template)
+=head1 EMBEDDED COMPONENT SYNTAX (HTML::Template::Pluggable)
 
 =head2 Syntax
 
-The L<HTML::Template> syntax for embedding components is:
+The L<HTML::Template::Pluggable> syntax for embedding components is:
 
-    <TMPL_VAR NAME="cgiapp_embed('some_run_mode', param1, param2, 'literal string3')">
-
-I<(Support for parameter passing is limited.  See the note on paramters below.)>
+    <TMPL_VAR NAME="cgiapp.embed('some_run_mode', param1, param2, 'literal string3')">
 
 This can be overridden by the following configuration variables:
 
-    embed_tag_name       # default 'cgiapp_embed'
+    embed_tag_name       # default 'cgiapp'
 
 For instance by setting the following value in your configuration file:
 
-    embed_tag_name       '***component***'
+    embed_tag_name       '__acme'
 
 Then the embedded component tag will look like:
 
-    <TMPL_VAR NAME="***component***('some_run_mode')">
+    <TMPL_VAR NAME="__acme.embed('some_run_mode')">
 
-=head2 Parameters
-
-Since L<HTML::Template> doesn't support parameter passing in the
-template, the C<HTMLTemplate> driver emulates this behaviour.
-
-The parameter list passed to the embed subroutine is parsed before
-the template is parsed.  Literal strings (strings enclosed in single or
-double quotes) are passed verbatim to the target run mode.  Params not
-enclosed in quotes are looked up in C<< $self->param >>; the resulting
-literal or looked up values are passed to the target run mode.  Finally,
-the return value of the run mode (its output) is passed as a parameter
-value to the template.
-
-Note that the param lookup scheme is somewhat simplistic.  For instance,
-it does not respect the scope of loops or conditional constructs within
-the template.
-
-For proper parameter handling using L<HTML::Template>-style templates,
-use either the
-L<CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr>
-or the L<CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplatePluggable>
-driver instead.
-
+The value of C<embed_tag_name> must consist of numbers, letters and
+underscores (C<_>), and must not begin with a number.
 
 =cut
 
@@ -75,7 +57,7 @@ use vars qw(@ISA);
 
 =head1 CONFIGURATION
 
-The L<CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate> driver
+The L<CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplatePluggable> driver
 accepts the following config parameters:
 
 =over 4
@@ -83,7 +65,7 @@ accepts the following config parameters:
 =item embed_tag_name
 
 The name of the tag used for embedding components.  Defaults to
-C<cgiapp_embed>.
+C<cgiapp>.
 
 =item template_extension
 
@@ -97,11 +79,11 @@ the C<template_extension> is C<.html>.
 B<This feature is now deprecated and will be removed in a future release.>
 
 If this config parameter is true, then
-L<CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate> will
+L<CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplatePluggable> will
 copy all of the webapp's query params into the template using
 L<HTML::Template>'s C<associate> mechanism:
 
-    my $driver = HTML::Template->new(
+    my $driver = HTML::Template::Pluggable->new(
         associate => $self->query,
     );
 
@@ -127,7 +109,7 @@ sub driver_config_keys {
 sub default_driver_config {
     (
         template_extension => '.html',
-        embed_tag_name     => 'CGIAPP_embed',
+        embed_tag_name     => 'cgiapp',
         associate_query    => 0,
     );
 }
@@ -141,7 +123,8 @@ to operate.  In this case: L<HTML::Template>.
 
 sub required_modules {
     return qw(
-        HTML::Template
+        HTML::Template::Pluggable
+        HTML::Template::Plugin::Dot
     );
 }
 
@@ -174,9 +157,9 @@ sub initialize {
     my $string_ref = $self->string_ref;
     my $filename   = $self->filename;
 
-    $string_ref or $filename or croak "HTML::Template: file or string must be specified";
+    $string_ref or $filename or croak "HTML::Template::Pluggable: file or string must be specified";
 
-    my $query    = $self->{'webapp'}->query or croak "HTML::Template webapp query not found";
+    my $query    = $self->{'webapp'}->query or croak "HTML::Template::Pluggable webapp query not found";
 
     my %params = (
         %{ $self->{'native_config'} },
@@ -194,14 +177,14 @@ sub initialize {
         $params{'associate'} ||= $query;  # allow user to override associate with their own
     }
 
-    $self->{'driver'} = HTML::Template->new(%params);
+    $self->{'driver'} = HTML::Template::Pluggable->new(%params);
 
 
 }
 
 =item render_template
 
-Fills the C<HTML::Template> object with C<< $self->param >>
+Fills the C<HTML::Template::Pluggable> object with C<< $self->param >>
 replacing any magic C<*embed*> tags with the content generated by the
 appropriate runmodes.
 
@@ -213,64 +196,49 @@ See the docs for C<CGI::Application::Plugin::AnyTemplate::Base> for details.
 
 =cut
 
+# sub dump_parm {
+#     my $self = shift;
+#     my $template = shift;
+#     foreach my $key ($template->param) {
+#         print STDERR "   -->$key: ". $template->param($key) . "\n";
+#     }
+# }
+
 sub render_template {
     my $self = shift;
 
     my $driver_config = $self->{'driver_config'};
-    my $tmpl_vars     = $self->get_param_hash;
-
-    # pull in any included templates by calling them as run modes
-
-    my $tag_match = '^'
-                  . quotemeta(
-                       $driver_config->{'embed_tag_name'}
-                    )
-                  . '\s*'
-                  . '\((.*?)\)?'   # optional params
-                  . '\s*'
-                  . '$';
-
-    $tag_match    = qr/$tag_match/i;
 
     my $component_handler = $self->{'component_handler_class'}->new(
         'webapp'              => $self->{'webapp'},
         'containing_template' => $self,
     );
+    # use Data::Dumper;
 
     # fill the template
     my $template = $self->{'driver'};
 
-    # fill the CGIAPP_embed(foo,...) tags
+    my $params = $self->get_param_hash;
+    # print STDERR "param_hash: ", Dumper [$params];
+
+    # print STDERR "before set\n";
+    # $self->dump_parm($template);
+
+    # Have to set initial params before the 'cgiapp' embed handler param
+    $template->param(%$params);
+
+    # print STDERR "after set\n";
+    # $self->dump_parm($template);
+
+    # Only add the 'cgiapp' embed handler param if it exists in the template
     foreach my $tag ($template->query) {
-        # print STDERR "tag: $tag ($tag_match)\n";
-        if ($tag =~ $tag_match) {
-            # print STDERR "tag: $tag ($tag_match) MATCHED\n";
-            my $params = $1;
-
-            my @params = split /\s*,\s*/, $params;
-            my @prepped_params;
-
-            foreach my $param (@params) {
-                # print STDERR "param: $param\n";
-                if ($param =~ /^('|")?(.*?)\1$/) {
-                    $param = $2;  # remove quotes
-                    # print STDERR "param-de-quoted: $param\n";
-                    push @prepped_params, $param;
-                }
-                else {
-                    $param = $tmpl_vars->{$param};
-                    # print STDERR "param-looked-up: $param\n";
-                    push @prepped_params, $param;
-                }
-            }
-            my $run_mode = shift @prepped_params;
-            # print STDERR "rm: $run_mode (@prepped_params)\n";
-
-            $self->param($tag => ${ $component_handler->embed_direct($run_mode, @prepped_params) });
+        if ($tag =~ /^$driver_config->{'embed_tag_name'}\.(?:embed)|(?:dispatch)/) {
+            # print STDERR "\$template->param($driver_config->{'embed_tag_name'} => $component_handler);\n";
+            $template->param($driver_config->{'embed_tag_name'} => $component_handler);
+            last;
         }
     }
 
-    $template->param($tmpl_vars);
     my $output = $template->output;
     return \$output;
 }
@@ -280,8 +248,8 @@ sub render_template {
     CGI::Application::Plugin::AnyTemplate
     CGI::Application::Plugin::AnyTemplate::Base
     CGI::Application::Plugin::AnyTemplate::ComponentHandler
+    CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate
     CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr
-    CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplatePluggable
     CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit
     CGI::Application::Plugin::AnyTemplate::Driver::Petal
 
@@ -314,4 +282,3 @@ under the same terms as Perl itself.
 =cut
 
 1;
-

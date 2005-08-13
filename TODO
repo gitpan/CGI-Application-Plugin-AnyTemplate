@@ -1,5 +1,8 @@
 
 TODO
+- Add developer tests that run the test suite with and without various
+  optional prerequisite modules installed
+
 - [under debate] allow native syntax for include paths to also work in
   addition to the include_paths param
 
