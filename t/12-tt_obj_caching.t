@@ -288,10 +288,12 @@ sub test_driver_prereqs {
 
     my @required_modules = $driver_module->required_modules;
 
-    eval "require $_;" for @required_modules;
-
-    if ($@) {
-        return;
+    foreach (@required_modules) {
+        eval "require $_;";
+        if ($@) {
+            return;
+        }
     }
     return 1;
+
 }

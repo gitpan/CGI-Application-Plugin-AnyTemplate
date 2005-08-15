@@ -1,5 +1,17 @@
 Revision history for CGI-Application-Plugin-AnyTemplate
 
+0.10_05 Aug 13, 2005 [**DEVELOPER RELEASE**]
+        - fixed a bug in the tests for testing module prerequisites
+        - it is now possible to run the test suite while simulating the
+          absense of specific templating modules.  To run the test suite
+          multiple times (each with a different selection of absent
+          modules), run:
+
+             $ perl misc/prove_without_modules.pl t/*.t
+
+          To customize this process, see the instructions at the top of
+          misc/prove_without_modules.pl
+
 0.10_04 Aug 13, 2005 [**DEVELOPER RELEASE**]
         - new driver HTMLTemplatePluggable has support for
           HTML::Template::Pluggable and HTML::Template::Plugin::Dot

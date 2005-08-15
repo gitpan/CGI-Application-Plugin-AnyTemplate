@@ -123,6 +123,7 @@ to operate.  In this case: L<HTML::Template>.
 
 sub required_modules {
     return qw(
+        HTML::Template
         HTML::Template::Pluggable
         HTML::Template::Plugin::Dot
     );
@@ -196,14 +197,6 @@ See the docs for C<CGI::Application::Plugin::AnyTemplate::Base> for details.
 
 =cut
 
-# sub dump_parm {
-#     my $self = shift;
-#     my $template = shift;
-#     foreach my $key ($template->param) {
-#         print STDERR "   -->$key: ". $template->param($key) . "\n";
-#     }
-# }
-
 sub render_template {
     my $self = shift;
 
@@ -213,27 +206,18 @@ sub render_template {
         'webapp'              => $self->{'webapp'},
         'containing_template' => $self,
     );
-    # use Data::Dumper;
 
     # fill the template
     my $template = $self->{'driver'};
 
     my $params = $self->get_param_hash;
-    # print STDERR "param_hash: ", Dumper [$params];
-
-    # print STDERR "before set\n";
-    # $self->dump_parm($template);
 
     # Have to set initial params before the 'cgiapp' embed handler param
     $template->param(%$params);
 
-    # print STDERR "after set\n";
-    # $self->dump_parm($template);
-
     # Only add the 'cgiapp' embed handler param if it exists in the template
     foreach my $tag ($template->query) {
         if ($tag =~ /^$driver_config->{'embed_tag_name'}\.(?:embed)|(?:dispatch)/) {
-            # print STDERR "\$template->param($driver_config->{'embed_tag_name'} => $component_handler);\n";
             $template->param($driver_config->{'embed_tag_name'} => $component_handler);
             last;
         }

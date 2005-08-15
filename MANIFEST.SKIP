@@ -1,8 +1,6 @@
 ^_build
 ^Build$
 ^blib
-^opt_lib
-^test_lib
 ~$
 \.cvsignore$
 \.bak$
