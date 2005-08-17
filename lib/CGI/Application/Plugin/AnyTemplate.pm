@@ -7,11 +7,11 @@ CGI::Application::Plugin::AnyTemplate - Use any templating system from within CG
 
 =head1 VERSION
 
-Version 0.10_05
+Version 0.10
 
 =cut
 
-our $VERSION = '0.10_05';
+our $VERSION = '0.10';
 
 =head1 SYNOPSIS
 

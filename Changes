@@ -1,5 +1,40 @@
 Revision history for CGI-Application-Plugin-AnyTemplate
 
+0.10    Aug 17, 2005
+        - This is a major new release with a lot of new features and
+          some incompatible API changes.
+
+          The new features are:
+
+            * new driver (HTMLTemplatePluggable) has support for
+              HTML::Template::Pluggable and HTML::Template::Plugin::Dot
+
+            * AnyTemplate can now optionally provide a load_tmpl method
+              like the one built into CGI::Application, so that old code
+              can get the benefit of AnyTemplate.
+
+            * added support for the load_tmpl hook
+
+            * test suite should be less fragile for users who don't have
+              all of the templating modules installed
+
+          The incompatibilities are:
+
+            * associate_query off by default
+            * associate_query now deprecated
+            * CAP::Forward now required
+            * default template names determined from $self->current_runmode, not
+              from the name of the calling sub
+            * template_pre_process and template_post_process now need to be
+              explicitly registered with $self->add_callback()
+            * tmpl_path is respected
+
+        - for more info on these changes see the changelog below for the developer
+          versions released since 0.08
+
+0.10_06 Aug 17, 2005 [**DEVELOPER RELEASE**] [unreleased]
+        - added an explit test to see if HTML::Template::Plugin::Dot works
+
 0.10_05 Aug 13, 2005 [**DEVELOPER RELEASE**]
         - fixed a bug in the tests for testing module prerequisites
         - it is now possible to run the test suite while simulating the

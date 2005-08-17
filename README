@@ -3,7 +3,7 @@ NAME
     within CGI::Application using a unified interface
 
 VERSION
-    Version 0.10_05
+    Version 0.10
 
 SYNOPSIS
     In your CGI::Application-based webapp:

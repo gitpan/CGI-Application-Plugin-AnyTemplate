@@ -38,6 +38,7 @@ t/16-load_default_to_crm.t
 t/17-load_after_forward.t
 t/18-load_tmpl.t
 t/19-tmpl_path.t
+t/20-ht-dot.t
 t/30-driver_errors.t
 t/31-exporter_renaming.t
 t/pod-coverage.t
@@ -85,6 +86,7 @@ t/tmpl/embed_outer.html_expr
 t/tmpl/embed_outer.html_pluggable
 t/tmpl/embed_outer.tmpl
 t/tmpl/embed_outer.xhtml
+t/tmpl/htdot.html
 t/tmpl/simple.html
 t/tmpl/simple.tmpl
 t/tmpl/simple.xhtml
