@@ -1,5 +1,23 @@
 Revision history for CGI-Application-Plugin-AnyTemplate
 
+0.11    Sep 08, 2005
+        - fixed a bug fill/process when called with a single non-hashref
+          argument.  The following used to be broken; now they DWIM:
+
+               $self->template->fill('filename');
+               $self->template->fill(\$template);
+
+        - fixed a bug in template_post_process that has been there since
+          the beginning.  The callback was being called as:
+
+              template_post_process($self, \$output)  # wrong!
+
+          But it was documented as:
+
+              template_post_process($self, $template, \$output)  # right!
+
+          It's been fixed to match the documentation.
+
 0.10    Aug 17, 2005
         - This is a major new release with a lot of new features and
           some incompatible API changes.

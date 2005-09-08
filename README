@@ -3,7 +3,7 @@ NAME
     within CGI::Application using a unified interface
 
 VERSION
-    Version 0.10
+    Version 0.11
 
 SYNOPSIS
     In your CGI::Application-based webapp:
@@ -506,6 +506,24 @@ METHODS
 
         my $template = $self->template->load;
         $template->output(\%params);
+
+    And the code:
+
+        $self->template->fill('filename');
+
+    is equivalent to:
+
+        my $template = $self->template->load('filename');
+        $template->output;
+
+    And the code:
+
+        $self->template->fill(\$some_text);
+
+    is equivalent to:
+
+        my $template = $self->template->load(\$some_text);
+        $template->output;
 
   process
     "process" is an alias for "fill".

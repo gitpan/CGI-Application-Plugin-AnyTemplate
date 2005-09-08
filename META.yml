@@ -1,6 +1,6 @@
 ---
 name: CGI-Application-Plugin-AnyTemplate
-version: 0.10
+version: 0.11
 author:
   - Michael Graham <mag-perl@occamstoothbrush.com>
 abstract: Use any templating system from within CGI::Application using a unified interface
@@ -14,7 +14,7 @@ requires:
 provides:
   CGI::Application::Plugin::AnyTemplate:
     file: lib/CGI/Application/Plugin/AnyTemplate.pm
-    version: 0.10
+    version: 0.11
   CGI::Application::Plugin::AnyTemplate::Base:
     file: lib/CGI/Application/Plugin/AnyTemplate/Base.pm
   CGI::Application::Plugin::AnyTemplate::ComponentHandler:
@@ -29,4 +29,4 @@ provides:
     file: lib/CGI/Application/Plugin/AnyTemplate/Driver/Petal.pm
   CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit:
     file: lib/CGI/Application/Plugin/AnyTemplate/Driver/TemplateToolkit.pm
-generated_by: Module::Build version 0.2607
+generated_by: Module::Build version 0.2611

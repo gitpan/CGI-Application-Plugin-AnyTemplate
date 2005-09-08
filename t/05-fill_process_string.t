@@ -1,34 +1,24 @@
 
 use strict;
-use Test::More;
-
-use CGI::Application;
-
-if (CGI::Application->can('new_hook')) {
-    plan 'no_plan';
-}
-else {
-    plan skip_all => 'installed version of CGI::Application does not support hooks';
-}
-
+use Test::More 'no_plan';
 
 my $Per_Template_Driver_Tests = 1;
 
 my %Expected_Output;
 
-$Expected_Output{'__Default__'} = <<'EOF';
+$Expected_Output{'four'}{'__Default__'} = <<'EOF';
 --begin--
-fish1----alueVay1
-fish2----alueVay2
-fish3----alueVay3
+this space unintentionally left sober
+s1:
 --end--
 EOF
 
-$Expected_Output{'Petal'} =
+$Expected_Output{'four'}{'Petal'} =
 qq|<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
-$Expected_Output{'__Default__'}
+$Expected_Output{'four'}{'__Default__'}
 </html>|;
+
 
 {
     package WebApp;
@@ -44,66 +34,43 @@ $Expected_Output{'__Default__'}
         $self->header_type('none');
         $self->start_mode('simple');
         $self->run_modes([qw/simple/]);
-        $self->template->config(
+
+        $self->template('one')->config(
             default_type  => $self->param('template_driver'),
             include_paths => 't/tmpl',
         );
-        $self->add_callback('template_pre_process', \&my_tmpl_pre1);
-        $self->add_callback('template_pre_process', \&my_tmpl_pre2);
-        $self->add_callback('template_post_process', \&my_tmpl_post1);
-        $self->add_callback('template_post_process', \&my_tmpl_post2);
+        $self->template('two')->config(
+            default_type  => $self->param('template_driver'),
+            include_paths => 't/tmpl',
+        );
+        $self->template('three')->config(
+            default_type  => $self->param('template_driver'),
+            include_paths => 't/tmpl',
+        );
+        $self->template('four')->config(
+            default_type  => $self->param('template_driver'),
+            include_paths => 't/tmpl',
+        );
     }
 
     sub simple {
         my $self = shift;
 
         my $driver = $self->param('template_driver');
-        my $expected_output = $Expected_Output{$driver}
-                           || $Expected_Output{'__Default__'};
 
-        my $template = $self->template->load;
-        $template->param(
-            'var1' => 'value1',
-            'var2' => 'value2',
-            'var3' => 'value3',
-        );
-        my $output = $template->output;
+
+        # named config 'four' - same settings, but we pass ref to template
+
+        my $expected_output = $Expected_Output{'four'}{$driver}
+                        || $Expected_Output{'four'}{'__Default__'};
+
+        my $template_text = $Expected_Output{'four'}{'__Default__'};
+        my $output = $self->template('four')->fill(\$template_text);
         $output = $$output if ref $output eq 'SCALAR';
 
-        is($output, $expected_output, "Got expected output for driver: $driver");
+        is($output, $expected_output, "(four) Got expected output for driver: $driver");
         '';
-    }
 
-    sub my_tmpl_pre1 {
-        my ($self, $template) = @_;
-        my $params = $template->get_param_hash;
-        foreach my $param (keys %$params) {
-            my $value = $template->param($param);
-            $value =~ s/value/aluevay/g;
-
-            $template->param($param, $value);
-        }
-
-    }
-    sub my_tmpl_pre2 {
-        my ($self, $template) = @_;
-        my $params = $template->get_param_hash;
-        foreach my $param (keys %$params) {
-            my $value = $template->param($param);
-            $value =~ s/v/V/g;
-
-            $template->param($param, $value);
-        }
-
-    }
-
-    sub my_tmpl_post1 {
-        my ($self, $text) = @_;
-        $$text =~ s/var/fish/g;
-    }
-    sub my_tmpl_post2 {
-        my ($self, $text) = @_;
-        $$text =~ s/:/----/g;
     }
 }
 
@@ -133,6 +100,7 @@ SKIP: {
     }
 }
 SKIP: {
+    skip "Petal doesn't support loading templates from strings", $Per_Template_Driver_Tests;
     if (test_driver_prereqs('Petal')) {
         WebApp->new(PARAMS => { template_driver => 'Petal' })->run;
     }

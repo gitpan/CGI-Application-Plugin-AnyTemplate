@@ -17,6 +17,14 @@ my $builder = Module::Build->new(
 
         'CGI::Application::Plugin::Forward' => 0,
     },
+    meta_add            => {
+         noindex       => {
+             directory => [ qw/
+                 misc
+                 t
+             /]
+         }
+    },
     add_to_cleanup      => [ 'CGI-Application-Plugin-AnyTemplate-*' ],
     create_makefile_pl  => 'traditional',
 );

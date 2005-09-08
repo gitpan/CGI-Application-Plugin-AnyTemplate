@@ -1,5 +1,6 @@
 #!/bin/sh
 
+perl Build.PL
 rm MANIFEST
 misc/makedocs.pl
 perl ./Build.PL

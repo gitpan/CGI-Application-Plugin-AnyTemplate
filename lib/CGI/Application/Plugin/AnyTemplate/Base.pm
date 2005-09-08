@@ -223,7 +223,7 @@ sub output {
     if ($webapp and $webapp->can('call_hook')) {
         my $output_param = $output;
         $output_param = \$output_param unless ref $output_param;
-        $webapp->call_hook('template_post_process', $output_param);
+        $webapp->call_hook('template_post_process', $self, $output_param);
     }
     return $output;
 
