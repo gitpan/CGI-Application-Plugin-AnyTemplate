@@ -3,7 +3,7 @@ NAME
     within CGI::Application using a unified interface
 
 VERSION
-    Version 0.11
+    Version 0.12
 
 SYNOPSIS
     In your CGI::Application-based webapp:
@@ -261,6 +261,18 @@ METHODS
         It still has to provide the same interface as
         CGI::Application::Plugin::AnyTemplate::ComponentHandler. See the
         source code of that module for details.
+
+    return_references
+        When true (the default), "output" will return a reference to a
+        string rather than a copy. Normally this won't matter. For instance,
+        "CGI::Application" doesn't care whether you return a string or a
+        reference to a string from your run modes.
+
+        However, if you want to manipulate the output of the $html returned
+        from the template, you may find it convenient to make "output"
+        return a string instead of a reference. Especially if you are
+        converting old code based on HTML::Template which expects "output"
+        to return a string.
 
    Driver and Native Configuration
     You can configure all the drivers at once with a single call to
@@ -607,6 +619,10 @@ APPLICATION METHODS
         "auto_add_template_extension" set to a true value in your call to
         "$self->template->config".
 
+    *   The "load_tmpl" method ignores always returns a string, not a
+        reference to a string. It ignores the setting of the
+        "returns_references" option.
+
   tmpl_path
     You can set the template "include_paths" by calling
     "$self->tmpl_path('/path/to/templates')".
@@ -664,6 +680,11 @@ DRIVER METHODS
     You can also supply names and values to the template at this stage:
 
         return $template->output('name' => 'value', 'name2' => 'value2');
+
+    If "return_references" option is set to true, then the return value of
+    "output" will be a reference to a string. If the "return_references"
+    option is false, then a copy of the string will be returned. By default
+    "return_references" is true.
 
     When you call the "output" method, any components embedded in the
     template are run. See "EMBEDDED COMPONENTS", below.

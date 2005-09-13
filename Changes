@@ -1,5 +1,12 @@
 Revision history for CGI-Application-Plugin-AnyTemplate
 
+0.12    Sep 13, 2005
+        - added return_references option, defaulting to true.
+        - changed load_tmpl to always return a string, rather than a
+          reference
+        - added documentation indicating that output returns a reference
+          by default
+
 0.11    Sep 08, 2005
         - fixed a bug fill/process when called with a single non-hashref
           argument.  The following used to be broken; now they DWIM:

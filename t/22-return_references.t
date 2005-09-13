@@ -20,21 +20,14 @@ qq|<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 $Expected_Output{'__Default__'}
 </html>|;
 
-my %Extension = (
-    HTMLTemplate          => '.html',
-    HTMLTemplateExpr      => '.html',
-    HTMLTemplatePluggable => '.html',
-    TemplateToolkit       => '.tmpl',
-    Petal                 => '.xhtml',
-);
-
 {
     package WebApp;
+    use Test::More;
     use CGI::Application;
+    use CGI::Application::Plugin::AnyTemplate;
+
     use vars '@ISA';
     @ISA = ('CGI::Application');
-    use Test::More;
-    use CGI::Application::Plugin::AnyTemplate qw/:load_tmpl/;
 
     sub setup {
         my $self = shift;
@@ -54,14 +47,7 @@ my %Extension = (
         my $expected_output = $Expected_Output{$driver}
                            || $Expected_Output{'__Default__'};
 
-        my $extension = $Extension{$driver};
-
-        ok($extension, "extension for driver: $driver");
-
-        my $template = $self->load_tmpl(
-            'simple' . $extension
-        );
-
+        my $template = $self->template->load;
         $template->param(
             'var1' => 'value1_xxx',
             'var2' => 'value2_xxx',
@@ -84,17 +70,12 @@ my %Extension = (
         is(ref $object, $ref, "template object ref: $ref");
 
         my $output = $template->output;
-        $output = $$output if ref $output eq 'SCALAR';
+        is(ref $output, 'SCALAR', "output returns reference by default");
+        is($$output, $expected_output, "Got expected output for driver: $driver");
 
-        is($output, $expected_output, "Got expected output for driver: $driver");
 
-
-        # use include path
-        $template = $self->load_tmpl(
-            'simple_elsewhere' . $extension,
-            path => 't/tmpl_include',
-        );
-
+        # Now turning off return_references
+        $template = $self->template->load('return_references' => undef);
         $template->param(
             'var1' => 'value1_xxx',
             'var2' => 'value2_xxx',
@@ -117,8 +98,8 @@ my %Extension = (
         is(ref $object, $ref, "template object ref: $ref");
 
         $output = $template->output;
-        ok(!ref $output, "load_tmpl returns string, not reference");
-        is($output, $expected_output, "Got expected output for driver: $driver");
+        ok(!ref $output, "return_references off: output returns string");
+        is($output, $expected_output, "return_references off: Got expected output for driver: $driver");
         '';
     }
 }
@@ -168,6 +149,7 @@ SKIP: {
         skip "Petal not installed", $Per_Template_Driver_Tests;
     }
 }
+
 SKIP: {
     if (test_driver_prereqs('HTMLTemplatePluggable')) {
         require HTML::Template::Plugin::Dot;

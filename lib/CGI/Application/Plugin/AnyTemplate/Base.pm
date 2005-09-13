@@ -25,13 +25,14 @@ sub _new {
 
     my $self = {};
 
-    $self->{'driver_config'}    = delete $args{'driver_config'} || {};
-    $self->{'native_config'}    = delete $args{'native_config'} || {};
-    $self->{'include_paths'}    = delete $args{'include_paths'} || [];
-    $self->{'filename'}         = delete $args{'filename'};
-    $self->{'string_ref'}       = delete $args{'string_ref'};
-    $self->{'callers_package'}  = delete $args{'callers_package'};
-    $self->{'webapp'}           = delete $args{'webapp'};
+    $self->{'driver_config'}     = delete $args{'driver_config'} || {};
+    $self->{'native_config'}     = delete $args{'native_config'} || {};
+    $self->{'include_paths'}     = delete $args{'include_paths'} || [];
+    $self->{'filename'}          = delete $args{'filename'};
+    $self->{'string_ref'}        = delete $args{'string_ref'};
+    $self->{'callers_package'}   = delete $args{'callers_package'};
+    $self->{'return_references'} = delete $args{'return_references'};
+    $self->{'webapp'}            = delete $args{'webapp'};
 
     $self->{'component_handler_class'} = delete $args{'component_handler_class'}
                                 || 'CGI::Application::Plugin::AnyTemplate::ComponentHandler';
@@ -225,8 +226,12 @@ sub output {
         $output_param = \$output_param unless ref $output_param;
         $webapp->call_hook('template_post_process', $self, $output_param);
     }
-    return $output;
-
+    if ($self->{'return_references'}) {
+        return ref $output ? $output : \$output;
+    }
+    else {
+        return ref $output ? $$output : $output;
+    }
 }
 
 =item filename

@@ -7,11 +7,11 @@ CGI::Application::Plugin::AnyTemplate - Use any templating system from within CG
 
 =head1 VERSION
 
-Version 0.11
+Version 0.12
 
 =cut
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 =head1 SYNOPSIS
 
@@ -335,6 +335,18 @@ value of this paramter.
 It still has to provide the same interface as
 L<CGI::Application::Plugin::AnyTemplate::ComponentHandler>.  See the source
 code of that module for details.
+
+=item return_references
+
+When true (the default), C<output> will return a reference to a string
+rather than a copy.  Normally this won't matter.  For instance,
+C<CGI::Application> doesn't care whether you return a string or a
+reference to a string from your run modes.
+
+However, if you want to manipulate the output of the C<$html> returned
+from the template, you may find it convenient to make C<output> return a
+string instead of a reference.  Especially if you are converting old
+code based on HTML::Template which expects C<output> to return a string.
 
 =back
 
@@ -665,6 +677,10 @@ sub load {
 
     my $plugin_config = $self->{'current_config'}{'plugin_config'};
 
+    my $return_references = 1;
+    if (exists $plugin_config->{'return_references'}) {
+        $return_references = $plugin_config->{'return_references'};
+    }
 
     # determine template type
 
@@ -738,6 +754,7 @@ sub load {
          'include_paths'           => $include_paths,
          'filename'                => $filename,
          'string_ref'              => $string_ref,
+         'return_references'       => $return_references,
          'callers_package'         => $plugin_config->{'callers_package'},
          'webapp'                  => $self->{'webapp'},
          'component_handler_class' => $plugin_config->{'component_handler_class'},
@@ -764,6 +781,7 @@ sub _plugin_config_keys {
         file
         string
         component_handler_class
+        return_references
     /;
 }
 
@@ -1114,6 +1132,11 @@ The C<load_tmpl> method does not automatically add an extension to the
 filename you pass to it, even if you have C<auto_add_template_extension>
 set to a true value in your call to C<< $self->template->config >>.
 
+=item *
+
+The C<load_tmpl> method ignores always returns a string, not a reference to a
+string.  It ignores the setting of the C<returns_references> option.
+
 =back
 
 =cut
@@ -1132,6 +1155,7 @@ sub load_tmpl {
     if ($path) {
         $params{'add_include_paths'} = $path;
     }
+    $params{'return_references'} = undef;
 
     return $self->template->load(%params);
 }
@@ -1199,6 +1223,10 @@ You can also supply names and values to the template at this stage:
 
     return $template->output('name' => 'value', 'name2' => 'value2');
 
+If C<return_references> option is set to true, then the return value
+of C<output> will be a reference to a string.  If the
+C<return_references> option is false, then a copy of the string will be
+returned.  By default C<return_references> is true.
 
 When you call the C<output> method, any components embedded in the
 template are run.  See L<"EMBEDDED COMPONENTS">, below.

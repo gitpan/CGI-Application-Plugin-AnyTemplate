@@ -40,6 +40,7 @@ t/18-load_after_forward.t
 t/19-load_tmpl.t
 t/20-tmpl_path.t
 t/21-ht-dot.t
+t/22-return_references.t
 t/30-driver_errors.t
 t/31-exporter_renaming.t
 t/pod-coverage.t
