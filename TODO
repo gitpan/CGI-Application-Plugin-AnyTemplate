@@ -1,5 +1,8 @@
 
 TODO
+- add callback to allow a custom method for generating the template
+  filename
+
 - [under debate] allow native syntax for include paths to also work in
   addition to the include_paths param
 

@@ -1,5 +1,11 @@
 Revision history for CGI-Application-Plugin-AnyTemplate
 
+0.13
+        - fixd bug where clear_params didn't work (Wojciech Pietron)
+        - fixed typos in docs regarding include_paths and
+          add_include_paths (Wojciech Pietron)
+        - minor doc fix
+
 0.12    Sep 13, 2005
         - added return_references option, defaulting to true.
         - changed load_tmpl to always return a string, rather than a

@@ -7,11 +7,11 @@ CGI::Application::Plugin::AnyTemplate - Use any templating system from within CG
 
 =head1 VERSION
 
-Version 0.12
+Version 0.13
 
 =cut
 
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 =head1 SYNOPSIS
 
@@ -141,9 +141,9 @@ or (with slightly less typing):
 =head3 Verbose syntax (for complete control)
 
     my $template = $self->template('named_config')->load(
-        file             => 'edit_user'
-        type             => 'TemplateToolkit'
-        add_include_path => '.',
+        file              => 'edit_user'
+        type              => 'TemplateToolkit'
+        add_include_paths => '.',
     );
 
     $template->param('foo' => 'bar');
@@ -582,7 +582,7 @@ you can specify filename and configuration paramters directly:
         file                        => 'some_file.tmpl',
         type                        => 'HTMLTemplate',
         auto_add_template_extension => 0,
-        add_inlcude_path            => '..',
+        add_include_paths           => '..',
         HTMLTemplate => {
             die_on_bad_params => 1,
         },
@@ -1104,7 +1104,7 @@ This will get translated into:
     my $template = $self->template->load(
         file => 'some_template.html',
         auto_add_template_extension => 0,
-        add_include_path => '/path/to/templates',
+        add_include_paths => '/path/to/templates',
         HTMLTemplate => {
             cache => 0,
         }
@@ -1285,7 +1285,7 @@ C<HTML::Template> parameters then let me know, or add a feature request
 on L<http://rt.cpan.org>.
 
 The C<path> param of C<$ht_params> is initially set to the value of
-C<add_include_path> (if set).  Your callback can modify the C<path>
+C<add_include_paths> (if set).  Your callback can modify the C<path>
 param, and C<add_include_param> will be set to the result.
 
 Plugin authors who want to provide template processing features are

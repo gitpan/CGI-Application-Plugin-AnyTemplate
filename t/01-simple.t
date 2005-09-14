@@ -9,7 +9,7 @@ my %Expected_Output;
 $Expected_Output{'__Default__'} = <<'EOF';
 --begin--
 var1:value1
-var2:value2
+var2:
 var3:value3
 --end--
 EOF
@@ -37,6 +37,15 @@ $Expected_Output{'__Default__'}
         $self->template->config(
             default_type  => $self->param('template_driver'),
             include_paths => 't/tmpl',
+            HTMLTemplate => {
+                die_on_bad_params => 0,
+            },
+            HTMLTemplatePluggable => {
+                die_on_bad_params => 0,
+            },
+            HTMLTemplateExpr => {
+                die_on_bad_params => 0,
+            },
         );
     }
 
@@ -56,11 +65,12 @@ $Expected_Output{'__Default__'}
             'var5' => 'value5_xxx',
             'var6' => 'value6_xxx',
         );
+
+        $template->output;
         $template->clear_params;
 
         $template->param(
             'var1' => 'value1',
-            'var2' => 'value2',
             'var3' => 'value3',
         );
 
@@ -71,9 +81,6 @@ $Expected_Output{'__Default__'}
 
         my $output = $template->output;
         $output = $$output if ref $output eq 'SCALAR';
-
-
-
 
         is($output, $expected_output, "Got expected output for driver: $driver");
         '';

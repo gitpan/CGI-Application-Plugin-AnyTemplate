@@ -182,6 +182,19 @@ sub initialize {
 
 }
 
+# If we have already called output, then any stored params have already
+# been stored in the driver.  So when the user calls clear_params on the
+# AT object, we have to call clear_params on the driver as well.
+
+sub clear_params {
+    my $self = shift;
+
+    if ($self->{'driver'}) {
+        $self->{'driver'}->clear_params;
+    }
+    $self->SUPER::clear_params;
+}
+
 =item render_template
 
 Fills the L<HTML::Template::Expr> object with C<< $self->param >>, and

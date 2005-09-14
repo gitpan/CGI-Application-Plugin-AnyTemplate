@@ -34,13 +34,19 @@ pod_coverage_ok(
 
 pod_coverage_ok(
         "CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplate",
-        { also_private => [ qr/^(default_driver_config)|(driver_config_keys)$/ ], },
+        { also_private => [ qr/^(default_driver_config)|(driver_config_keys)|(clear_params)$/ ], },
         "CAP::AnyTemplate::Driver::HTMLTemplate POD coverage",
 );
 
 pod_coverage_ok(
         "CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplateExpr",
-        { also_private => [ qr/^(default_driver_config)|(driver_config_keys)$/ ], },
+        { also_private => [ qr/^(default_driver_config)|(driver_config_keys)|(clear_params)$/ ], },
+        "CAP::AnyTemplate::Driver::HTMLTemplate POD coverage",
+);
+
+pod_coverage_ok(
+        "CGI::Application::Plugin::AnyTemplate::Driver::HTMLTemplatePluggable",
+        { also_private => [ qr/^(default_driver_config)|(driver_config_keys)|(clear_params)$/ ], },
         "CAP::AnyTemplate::Driver::HTMLTemplate POD coverage",
 );
 

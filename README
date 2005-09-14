@@ -3,7 +3,7 @@ NAME
     within CGI::Application using a unified interface
 
 VERSION
-    Version 0.12
+    Version 0.13
 
 SYNOPSIS
     In your CGI::Application-based webapp:
@@ -123,9 +123,9 @@ DESCRIPTION
 
    Verbose syntax (for complete control)
         my $template = $self->template('named_config')->load(
-            file             => 'edit_user'
-            type             => 'TemplateToolkit'
-            add_include_path => '.',
+            file              => 'edit_user'
+            type              => 'TemplateToolkit'
+            add_include_paths => '.',
         );
 
         $template->param('foo' => 'bar');
@@ -442,7 +442,7 @@ METHODS
             file                        => 'some_file.tmpl',
             type                        => 'HTMLTemplate',
             auto_add_template_extension => 0,
-            add_inlcude_path            => '..',
+            add_include_paths           => '..',
             HTMLTemplate => {
                 die_on_bad_params => 1,
             },
@@ -595,7 +595,7 @@ APPLICATION METHODS
         my $template = $self->template->load(
             file => 'some_template.html',
             auto_add_template_extension => 0,
-            add_include_path => '/path/to/templates',
+            add_include_paths => '/path/to/templates',
             HTMLTemplate => {
                 cache => 0,
             }
@@ -741,7 +741,7 @@ PRE- AND POST- PROCESS
     on <http://rt.cpan.org>.
 
     The "path" param of $ht_params is initially set to the value of
-    "add_include_path" (if set). Your callback can modify the "path" param,
+    "add_include_paths" (if set). Your callback can modify the "path" param,
     and "add_include_param" will be set to the result.
 
     Plugin authors who want to provide template processing features are
