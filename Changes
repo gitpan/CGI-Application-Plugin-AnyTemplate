@@ -1,6 +1,10 @@
 Revision history for CGI-Application-Plugin-AnyTemplate
 
-0.13
+0.14    Sep 25, 2005
+        - added template_filename_generator
+        - minor doc fix
+
+0.13    Sep 14, 2005
         - fixd bug where clear_params didn't work (Wojciech Pietron)
         - fixed typos in docs regarding include_paths and
           add_include_paths (Wojciech Pietron)

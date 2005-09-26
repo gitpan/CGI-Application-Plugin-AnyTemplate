@@ -7,11 +7,11 @@ CGI::Application::Plugin::AnyTemplate - Use any templating system from within CG
 
 =head1 VERSION
 
-Version 0.13
+Version 0.14
 
 =cut
 
-our $VERSION = '0.13';
+our $VERSION = '0.14';
 
 =head1 SYNOPSIS
 
@@ -325,6 +325,65 @@ type of template in its own directory, it's simpler to include all
 the directories all the time and use different extensions for different
 template types.
 
+=item template_filename_generator
+
+If you don't pass a filename to C<load>, one will be generated for you
+based on the current run mode.  If you want to customize this process,
+you can pass a reference to a subroutine to do the translation.  This
+subroutine will be passed a reference to the CGI::Application C<$self>
+object.
+
+Here is a subroutine that emulates the built-in behaviour of
+C<AnyTemplate>:
+
+    $self->template->config(
+        template_filename_generator => sub {
+            my ($self, $calling_method_name) = @_;
+                return $self->get_current_runmode;
+            }
+        }
+    );
+
+
+Here is an example of using a template filename generator to make full
+templates with full paths based on the module name as well as the
+current run mode (this is similar to how L<CGI::Application::Plugin::TT>
+generates its template filenames):
+
+    package My::WebApp;
+    use File::Spec;
+
+    sub cgiapp_init {
+        my $self = shift;
+
+        $self->template->config(
+            template_filename_generator => sub {
+                my $self     = shift;
+                my $run_mode = $self->get_current_runmode;
+                my $module   = ref $self;
+
+                my @segments = split /::/, $module;
+
+                return File::Spec->catfile(@segments, $run_mode);
+            }
+        );
+    }
+
+    sub run_mode {
+        my $self = shift;
+        $self->template->load;  # loads My/WebApp/run_mode.html
+    }
+
+    sub other_run_mode {
+        my $self = shift;
+        $self->template->load;  # loads My/WebApp/other_run_mode.html
+    }
+
+Note that if the C<auto_add_template_extension> option is on (which it
+is by default), then the extension will be added to your generated
+filename after you return it.  If you do not want this to happen, then
+set C<auto_add_template_extension> to a false value.
+
 =item component_handler_class
 
 Normally, component embedding is handled by
@@ -566,6 +625,10 @@ of C<< $self->get_current_runmode >> will not be updated:
         my $template = $self->template->load;  # loads 'first_runmode.html'
     }
 
+If you want to override the way the default template filename is
+generated, you can do so with the C<template_filename_generator>
+configuration parameter.
+
 If you call C<load> with one paramter, it is taken to be either the
 filename or a reference to a string containing the template text:
 
@@ -782,6 +845,7 @@ sub _plugin_config_keys {
         string
         component_handler_class
         return_references
+        template_filename_generator
     /;
 }
 
@@ -935,6 +999,7 @@ sub _require_driver {
 sub _guess_template_filename {
     my ($self, $plugin_config, $driver_config, $type, $crm) = @_;
 
+
     my $filename;
     if (exists $plugin_config->{'file'}) {
         $filename = $plugin_config->{'file'};
@@ -942,6 +1007,10 @@ sub _guess_template_filename {
     else {
         # filename set to current run mode
         $filename = $crm;
+
+        if (ref $plugin_config->{'template_filename_generator'} eq 'CODE') {
+            $filename = $plugin_config->{'template_filename_generator'}->($self->{'webapp'});
+        }
     }
 
     if ($plugin_config->{'auto_add_template_extension'}) {
@@ -1092,7 +1161,7 @@ It is the equivalent of calling:
 
 If you add extra options to C<load_tmpl>, these will be assumed to be
 L<HTML::Template> specific options, with the exception of the C<path>
-option, which will be extracted and used as 'add_include_path':
+option, which will be extracted and used as 'add_include_paths':
 
     my $template = $self->load_tmpl('some_template.html',
         cache => 0,

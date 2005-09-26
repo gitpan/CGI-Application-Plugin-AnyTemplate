@@ -41,6 +41,7 @@ t/19-load_tmpl.t
 t/20-tmpl_path.t
 t/21-ht-dot.t
 t/22-return_references.t
+t/23-filename_generator.t
 t/30-driver_errors.t
 t/31-exporter_renaming.t
 t/pod-coverage.t
@@ -92,9 +93,15 @@ t/tmpl/embed_outer.html_pluggable
 t/tmpl/embed_outer.tmpl
 t/tmpl/embed_outer.xhtml
 t/tmpl/htdot.html
+t/tmpl/My/Sample/WebApp/start.html
+t/tmpl/My/Sample/WebApp/start.tmpl
+t/tmpl/My/Sample/WebApp/start.xhtml
 t/tmpl/simple.html
 t/tmpl/simple.tmpl
 t/tmpl/simple.xhtml
+t/tmpl/some_old_nonsense.html
+t/tmpl/some_old_nonsense.tmpl
+t/tmpl/some_old_nonsense.xhtml
 t/tmpl/test.ext_HTMLTemplate
 t/tmpl/test.ext_Petal
 t/tmpl/test.ext_TemplateToolkit
