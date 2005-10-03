@@ -1,5 +1,9 @@
 Revision history for CGI-Application-Plugin-AnyTemplate
 
+0.15    Oct 03, 2005
+        - include fix to work with old version of CAP::Forward that
+          doesn't always install its hooks properly.
+
 0.14    Sep 25, 2005
         - added template_filename_generator
         - minor doc fix

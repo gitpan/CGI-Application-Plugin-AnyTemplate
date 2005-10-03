@@ -7,11 +7,11 @@ CGI::Application::Plugin::AnyTemplate - Use any templating system from within CG
 
 =head1 VERSION
 
-Version 0.14
+Version 0.15
 
 =cut
 
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 
 =head1 SYNOPSIS
 
@@ -795,6 +795,7 @@ sub load {
         my %ht_params = (
            'path' => $plugin_config->{'add_include_paths'},
         );
+        $self->{'webapp'}->new_hook('load_tmpl');
         $self->{'webapp'}->call_hook(
             'load_tmpl',
             \%ht_params,

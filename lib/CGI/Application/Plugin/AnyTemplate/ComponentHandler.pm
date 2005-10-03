@@ -1,5 +1,8 @@
 
 package CGI::Application::Plugin::AnyTemplate::ComponentHandler;
+
+use CGI::Application;                  # fix for older version of CAP::Forward so
+                                       # that it can install its hooks properly
 use CGI::Application::Plugin::Forward;
 
 =head1 NAME
