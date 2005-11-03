@@ -1,5 +1,12 @@
 Revision history for CGI-Application-Plugin-AnyTemplate
 
+0.16    Nov 03, 2005
+        - fixed fill() so that when it is called without parameters, it
+          does not set the filename to undef.
+        - changed skip_libs to prereq_scenarios (and removed the scenarios
+          from the distribution)
+        - added new scenario for old CAP::Forward
+
 0.15    Oct 03, 2005
         - include fix to work with old version of CAP::Forward that
           doesn't always install its hooks properly.

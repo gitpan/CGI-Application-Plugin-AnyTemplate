@@ -35,8 +35,9 @@ $Expected_Output{'three'}{'__Default__'}
 
 $Expected_Output{'four'}{'__Default__'} = <<'EOF';
 --begin--
-this space unintentionally left sober
-s1:
+var1:
+var2:
+var3:
 --end--
 EOF
 
@@ -117,6 +118,15 @@ $Expected_Output{'four'}{'__Default__'}
         $output = $$output if ref $output eq 'SCALAR';
 
         is($output, $expected_output, "(three) Got expected output for driver: $driver");
+
+        # named config 'four' - but this time we call fill without any args
+        $expected_output = $Expected_Output{'four'}{$driver}
+                        || $Expected_Output{'four'}{'__Default__'};
+
+        $output = $self->template('four')->fill;
+        $output = $$output if ref $output eq 'SCALAR';
+
+        is($output, $expected_output, "(four) Got expected output for driver: $driver");
 
         '';
     }

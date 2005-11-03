@@ -3,7 +3,7 @@ NAME
     within CGI::Application using a unified interface
 
 VERSION
-    Version 0.15
+    Version 0.16
 
 SYNOPSIS
     In your CGI::Application-based webapp:
@@ -596,6 +596,15 @@ METHODS
     is equivalent to:
 
         my $template = $self->template->load(\$some_text);
+        $template->output;
+
+    And the code:
+
+        $self->template->fill;
+
+    is equivalent to:
+
+        my $template = $self->template->load;
         $template->output;
 
   process

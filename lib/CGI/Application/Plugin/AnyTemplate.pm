@@ -7,11 +7,11 @@ CGI::Application::Plugin::AnyTemplate - Use any templating system from within CG
 
 =head1 VERSION
 
-Version 0.15
+Version 0.16
 
 =cut
 
-our $VERSION = '0.15';
+our $VERSION = '0.16';
 
 =head1 SYNOPSIS
 
@@ -1079,6 +1079,15 @@ is equivalent to:
     my $template = $self->template->load(\$some_text);
     $template->output;
 
+And the code:
+
+    $self->template->fill;
+
+is equivalent to:
+
+    my $template = $self->template->load;
+    $template->output;
+
 
 =cut
 
@@ -1091,13 +1100,18 @@ sub fill {
         ($file_or_string, $params) = @_;
         $template = $self->load($file_or_string);
     }
-    elsif (ref $_[0] and ref $_[0] eq 'HASH') {  # single string is param ref
-        ($params) = @_;
-        $template = $self->load;
+    elsif (@_ == 1) {  # one param, first is param, filename or scallarref
+        if (ref $_[0] and ref $_[0] eq 'HASH') {  # single param is param ref
+            ($params) = @_;
+            $template = $self->load;
+        }
+        else { # single string param is filename or scalarref
+            ($file_or_string) = @_;
+            $template = $self->load($file_or_string);
+        }
     }
-    else { # single string param is filename or scalarref
-        ($file_or_string) = @_;
-        $template = $self->load($file_or_string);
+    else {
+        $template = $self->load;
     }
 
     $params ||= {};
