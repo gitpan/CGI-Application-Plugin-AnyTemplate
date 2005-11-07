@@ -32,6 +32,7 @@ sub _new {
     $self->{'string_ref'}        = delete $args{'string_ref'};
     $self->{'callers_package'}   = delete $args{'callers_package'};
     $self->{'return_references'} = delete $args{'return_references'};
+    $self->{'conf_name'}         = delete $args{'conf_name'};
     $self->{'webapp'}            = delete $args{'webapp'};
 
     $self->{'component_handler_class'} = delete $args{'component_handler_class'}

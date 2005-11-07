@@ -245,14 +245,26 @@ sub initialize {
     my $storage_class = $self->{'driver_config'}{'storage_class'};
     $storage_class ||= $self->{'callers_package'};
 
+    my $config_name = $self->{'conf_name'};
+
     if ($self->{'driver_config'}{'object_caching'} and exists $TT_Object_Store{$storage_class}) {
-        $driver = $TT_Object_Store{$storage_class};
+        if (defined $config_name) {
+            $driver = $TT_Object_Store{$storage_class}{'named'}{$config_name};
+        }
+        else {
+            $driver = $TT_Object_Store{$storage_class}{'default'};
+        }
     }
     if (!$driver) {
         $driver = Template->new(\%config);
     }
     if ($self->{'driver_config'}{'object_caching'}) {
-        $TT_Object_Store{$storage_class} = $driver;
+        if (defined $config_name) {
+            $TT_Object_Store{$storage_class}{'named'}{$config_name} = $driver;
+        }
+        else {
+            $TT_Object_Store{$storage_class}{'default'} = $driver;
+        }
     }
 
     # Stolen from Cees's CAP::TT

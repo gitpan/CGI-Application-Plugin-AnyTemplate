@@ -42,6 +42,7 @@ t/20-tmpl_path.t
 t/21-ht-dot.t
 t/22-return_references.t
 t/23-filename_generator.t
+t/24-tt_opts.t
 t/30-driver_errors.t
 t/31-exporter_renaming.t
 t/pod-coverage.t
@@ -78,6 +79,7 @@ t/tmpl/test.ext_HTMLTemplate
 t/tmpl/test.ext_Petal
 t/tmpl/test.ext_TemplateToolkit
 t/tmpl/test_template
+t/tmpl/wrapper.tmpl
 t/tmpl_include/cache_incl_paths_inner.tmpl
 t/tmpl_include/embed_inner1.html
 t/tmpl_include/embed_inner1.html_expr

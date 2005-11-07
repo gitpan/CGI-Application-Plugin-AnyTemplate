@@ -1,5 +1,9 @@
 Revision history for CGI-Application-Plugin-AnyTemplate
 
+0.17    Nov 07, 2005
+        - fixed storage of TT objects so that objects with different
+          named configs don't trample each other (discovered by RA Jones)
+
 0.16    Nov 03, 2005
         - fixed fill() so that when it is called without parameters, it
           does not set the filename to undef.

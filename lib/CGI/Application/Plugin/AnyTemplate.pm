@@ -7,11 +7,11 @@ CGI::Application::Plugin::AnyTemplate - Use any templating system from within CG
 
 =head1 VERSION
 
-Version 0.16
+Version 0.17
 
 =cut
 
-our $VERSION = '0.16';
+our $VERSION = '0.17';
 
 =head1 SYNOPSIS
 
@@ -821,6 +821,7 @@ sub load {
          'return_references'       => $return_references,
          'callers_package'         => $plugin_config->{'callers_package'},
          'webapp'                  => $self->{'webapp'},
+         'conf_name'               => $self->{'conf_name'},
          'component_handler_class' => $plugin_config->{'component_handler_class'},
     );
 

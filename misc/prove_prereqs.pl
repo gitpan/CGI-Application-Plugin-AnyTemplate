@@ -9,7 +9,7 @@ system.
 To run the test suite multiple times in a row, each tie multiple times
 (each with a different selection of absent modules), run:
 
-    $ perl misc/prove_without_modules.pl t/*.t
+    $ perl misc/prove_prereqs.pl t/*.t
 
 To add a new set of absent modules, make a subdir under t/prereq_scenarios, and
 add a dummy perl module for every module you want to skip.  This file

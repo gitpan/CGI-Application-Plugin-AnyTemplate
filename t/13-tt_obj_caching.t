@@ -23,6 +23,7 @@ my %Objects;
             type          => 'TemplateToolkit',
             include_paths => 't/tmpl',
         );
+
         $self->template('cgiapp')->config(
             type          => 'TemplateToolkit',
             include_paths => 't/tmpl',
@@ -89,6 +90,16 @@ my %Objects;
             type          => 'TemplateToolkit',
             include_paths => 't/tmpl',
         );
+
+        $self->template('alpha')->config(         # defaults to storage in WebApp1
+            type          => 'TemplateToolkit',
+            include_paths => 't/tmpl',
+        );
+        $self->template('beta')->config(          # defaults to storage in WebApp1
+            type          => 'TemplateToolkit',
+            include_paths => 't/tmpl',
+        );
+
     }
 
     sub simple {
@@ -110,6 +121,12 @@ my %Objects;
 
         $template = $self->template('none')->load;
         $Objects{WebApp1}{'none2_obj'} = $template->object;
+
+        $template = $self->template('alpha')->load;
+        $Objects{WebApp1}{'alpha'} = $template->object;
+
+        $template = $self->template('beta')->load;
+        $Objects{WebApp1}{'beta'} = $template->object;
 
         '';
     }
@@ -272,6 +289,9 @@ SKIP: {
         isnt($Objects{'OthApp'}{'none1_obj'},   $Objects{'WebApp2'}{'none2_obj'}, "[none obj] OthApp (none1)  != WebApp2 (none2)");
         isnt($Objects{'OthApp'}{'none1_obj'},   $Objects{'OthApp'}{'none2_obj'},  "[none obj] OthApp (none1)  != OthApp (none2)");
 
+        # Two template objects using the same storage class, but different
+        # names should be different objects
+        isnt($Objects{'WebApp1'}{'alpha'},  $Objects{'WebApp1'}{'beta'}, "WebApp1 (alpha) != WebApp1 (beta)");
 
 
     }
