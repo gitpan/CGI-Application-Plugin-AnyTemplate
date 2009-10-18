@@ -3,7 +3,7 @@ NAME
     within CGI::Application using a unified interface
 
 VERSION
-    Version 0.17
+    Version 0.18
 
 SYNOPSIS
     In your CGI::Application-based webapp:
@@ -1066,7 +1066,7 @@ CHANGING THE NAME OF THE 'template' METHOD
         }
 
 AUTHOR
-    Michael Graham, "<mag-perl@occamstoothbrush.com>"
+    Michael Graham, "<mgraham@cpan.org>"
 
 ACKNOWLEDGEMENTS
     I originally wrote this to be a subsystem in Richard Dice's
@@ -1084,6 +1084,10 @@ BUGS
     "bug-cgi-application-plugin-anytemplate@rt.cpan.org", or through the web
     interface at <http://rt.cpan.org>. I will be notified, and then you'll
     automatically be notified of progress on your bug as I make changes.
+
+SOURCE
+    The source code repository for this module can be found at
+    http://github.com/mgraham/CAP-AnyTemplate/
 
 SEE ALSO
         CGI::Application::Plugin::AnyTemplate::Base

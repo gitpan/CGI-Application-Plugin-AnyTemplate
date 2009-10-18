@@ -1,20 +1,24 @@
 ---
 name: CGI-Application-Plugin-AnyTemplate
-version: 0.17
+version: 0.18
 author:
-  - Michael Graham <mag-perl@occamstoothbrush.com>
+  - 'Michael Graham <mag-perl@occamstoothbrush.com>'
 abstract: Use any templating system from within CGI::Application using a unified interface
 license: perl
+resources:
+  license: http://dev.perl.org/licenses/
 requires:
   CGI::Application: 0
   CGI::Application::Plugin::Forward: 0
   Clone: 0
   Scalar::Util: 0
   Test::More: 0
+configure_requires:
+  Module::Build: 0.35
 provides:
   CGI::Application::Plugin::AnyTemplate:
     file: lib/CGI/Application/Plugin/AnyTemplate.pm
-    version: 0.17
+    version: 0.18
   CGI::Application::Plugin::AnyTemplate::Base:
     file: lib/CGI/Application/Plugin/AnyTemplate/Base.pm
   CGI::Application::Plugin::AnyTemplate::ComponentHandler:
@@ -29,4 +33,11 @@ provides:
     file: lib/CGI/Application/Plugin/AnyTemplate/Driver/Petal.pm
   CGI::Application::Plugin::AnyTemplate::Driver::TemplateToolkit:
     file: lib/CGI/Application/Plugin/AnyTemplate/Driver/TemplateToolkit.pm
-generated_by: Module::Build version 0.2611
+generated_by: Module::Build version 0.35
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+no_index:
+  directory:
+    - misc
+    - t

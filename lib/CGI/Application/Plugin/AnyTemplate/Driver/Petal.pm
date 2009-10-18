@@ -220,7 +220,7 @@ sub render_template {
     my $params = $self->get_param_hash;
     $params->{$driver_config->{'embed_tag_name'}} = $component_handler;
 
-    my $output = $template->process($params) || croak $template->error;
+    my $output = $template->process($params);
     return \$output;
 }
 
@@ -253,7 +253,7 @@ sub render_template {
 
 =head1 AUTHOR
 
-Michael Graham, C<< <mag-perl@occamstoothbrush.com> >>
+Michael Graham, C<< <mgraham@cpan.org> >>
 
 =head1 COPYRIGHT & LICENSE
 

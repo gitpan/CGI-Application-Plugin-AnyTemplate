@@ -62,6 +62,7 @@ sub new {
     $self->{'containing_template'} = $args{'containing_template'};
 
     weaken $self->{'webapp'};
+    weaken $self->{'containing_template'};
 
     return $self;
 }
@@ -145,7 +146,7 @@ sub dispatch_direct {
 
 =head1 AUTHOR
 
-Michael Graham, C<< <mag-perl@occamstoothbrush.com> >>
+Michael Graham, C<< <mgraham@cpan.org> >>
 
 =head1 COPYRIGHT & LICENSE
 

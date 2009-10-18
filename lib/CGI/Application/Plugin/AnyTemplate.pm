@@ -7,11 +7,11 @@ CGI::Application::Plugin::AnyTemplate - Use any templating system from within CG
 
 =head1 VERSION
 
-Version 0.17
+Version 0.18
 
 =cut
 
-our $VERSION = '0.17';
+our $VERSION = '0.18';
 
 =head1 SYNOPSIS
 
@@ -156,8 +156,17 @@ See also below under L<"CHANGING THE NAME OF THE 'template' METHOD">.
 use strict;
 use CGI::Application;
 use Carp;
-use Clone;
 use Scalar::Util qw(weaken);
+
+if ( ! eval { require Clone } ) {
+    if ( eval { require Clone::PP } ) {
+        no strict 'refs';
+        *Clone::clone = *Clone::PP::clone;
+    }
+    else {
+        die "Neiter Clone nor Clone::PP found - $@\n";
+    }
+}
 
 use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS $CAPAT_Namespace);
 
@@ -1640,7 +1649,7 @@ And to use syntax similar to L<CGI::Application>'s C<load_tmpl> mechanism:
 
 =head1 AUTHOR
 
-Michael Graham, C<< <mag-perl@occamstoothbrush.com> >>
+Michael Graham, C<< <mgraham@cpan.org> >>
 
 =head1 ACKNOWLEDGEMENTS
 
@@ -1660,6 +1669,10 @@ Please report any bugs or feature requests to
 C<bug-cgi-application-plugin-anytemplate@rt.cpan.org>, or through the web interface at
 L<http://rt.cpan.org>.  I will be notified, and then you'll automatically
 be notified of progress on your bug as I make changes.
+
+=head1 SOURCE
+
+The source code repository for this module can be found at http://github.com/mgraham/CAP-AnyTemplate/
 
 =head1 SEE ALSO
 

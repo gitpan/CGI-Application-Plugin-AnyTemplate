@@ -18,7 +18,7 @@ my $builder = Module::Build->new(
         'CGI::Application::Plugin::Forward' => 0,
     },
     meta_add            => {
-         noindex       => {
+         no_index       => {
              directory => [ qw/
                  misc
                  t

@@ -3,6 +3,7 @@
 ^blib
 ~$
 \.cvsignore$
+^\.git
 \.bak$
 CVS
 ^cover_db
@@ -11,4 +12,4 @@ CVS
 ^[^/]*\.html$
 \.gz$
 \.tar$
-^t/prereq_scenarios
+\.sw.$

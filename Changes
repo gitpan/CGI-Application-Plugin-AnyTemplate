@@ -1,5 +1,45 @@
 Revision history for CGI-Application-Plugin-AnyTemplate
 
+0.18    Oct 18, 2009
+        - Can now use Clone::PP if Clone is not installed.
+          Thanks to Bianka Martinovic (RT #37999).  Note that there
+          doesn't appear to be a way to indicate to Module::Build that
+          the module can use either Clone or Clone::PP - that it
+          requires one (but not both) of them.  So for now, Clone is
+          still listed as a prerequisite.
+
+        - updated Template::Toolkit driver docs to indicate how to use 
+          different encodings.  Thanks to Shmuel Fomberg (RT #34791).
+        
+        - removed spurious call to $template->error on Petal templates.
+          Thanks to William McKee (RT #20221).
+
+        - Component handler now weakens reference to containing_template,
+          in an attempt to avoid crazy memory usage.  Thanks to Dan Horne
+          (RT #18157).
+          
+        - Changes of interest to module maintainers only:
+          - t/prereqs-scenarios is now included in the distribution.  
+            
+            This is how I simulate the absense of specific modules when 
+            running the test suite.  For instance, the user may have 
+            HTML::Template::Expr installed, but not HTML::Template::Pluggable.
+            Or they may have Clone::PP installed, but not Clone.
+
+            To test the various prerequisite scenarios, use the included 
+            prove-prereqs.pl script:
+
+              ./misc/prove-prereqs.pl t/prereq_scenarios -Ilib t/
+
+            This runs the test suite several times.  Each time it simulates
+            a different set of unavailable modules.
+
+            Adapted from the Perl Hacks book.
+            
+          - fixed the makedocs script to work with more recent pod2html
+          
+          - changed noindex to no_index in META.yml
+
 0.17    Nov 07, 2005
         - fixed storage of TT objects so that objects with different
           named configs don't trample each other (discovered by RA Jones)
